@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Remix: Học Tiếng Anh Mầm Non \u0026 Tiểu Học",
+  "description": "Ứng dụng tương tác sinh động giúp trẻ em mầm non và tiểu học học tiếng Anh thông qua hình vẽ, âm thanh, trò chơi và kiểm tra thông minh.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
