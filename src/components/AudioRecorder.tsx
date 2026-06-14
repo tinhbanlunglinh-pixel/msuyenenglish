@@ -380,7 +380,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           className="mt-4 p-3 bg-white rounded-xl border-2 border-green-200 flex flex-col items-center shadow-sm w-full text-center"
         >
           <div className="text-sm font-sans font-black text-slate-600 mb-1">
-            Độ chính xác: <span className="text-2xl text-emerald-500">{scoreObj.score}%</span>
+            Điểm số: <span className="text-2xl text-emerald-500">{scoreObj.score / 10}/10</span>
           </div>
           <div className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-black uppercase mb-2 shadow-sm border border-amber-200">
             Chuẩn CEFR: {scoreObj.cefr}

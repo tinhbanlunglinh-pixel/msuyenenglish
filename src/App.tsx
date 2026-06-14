@@ -216,7 +216,7 @@ function getFallbackIllustrationClient(word: string): string {
   const key = word.toLowerCase().trim().replace(/[.,?!]/g, "");
   if (dict[key]) return dict[key];
   
-  const list = ["🎨", "🎭", "🎪", "🎢", "🚂", "🚀", "🛸", "🚁", "🚲", "🛹", "⚽", "🏀", "🎈", "🎁", "🧸", "🎉", "👑", "🌈", "☀️", "🍀", "🍎", "🥝", "🍉", "🍇", "🥕", "🍕", "🧁", "🍿", "🍩", "🥤", "🐾", "🦁", "🐼", "🐻", "🦊", "🐱", "🐶", "🐰", "🐨", "🐸"];
+  const list = ["✨", "🌟", "💫", "⭐", "🎯", "🧩", "💡", "🔔", "🎵", "🎶", "💮", "💠", "🌈", "💎", "🔮", "🪄", "🏆", "🏅", "🎨", "🎈", "🎉", "🎊", "🎀", "🎁", "🪄", "🔮", "🧸"];
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     hash = key.charCodeAt(i) + ((hash << 5) - hash);

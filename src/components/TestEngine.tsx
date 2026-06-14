@@ -86,6 +86,8 @@ export const TestEngine: React.FC<TestEngineProps> = ({
       return shuffled.slice(0, count).map((w) => w.word);
     };
 
+    const getArticle = (w: string) => /^[aeiou]/i.test(w) ? "an" : "a";
+
     const questionTypes: QuizQuestion["type"][] = [
       "multiple_choice",
       "listen_choice",
@@ -95,10 +97,17 @@ export const TestEngine: React.FC<TestEngineProps> = ({
       "true_false",
     ];
 
+    const shuffledWords = [...words].sort(() => 0.5 - Math.random());
+
     for (let i = 0; i < questionCount; i++) {
       // Pick target word sequentially or randomly
-      const target = words[i % poolSize];
-      const type = questionTypes[i % questionTypes.length];
+      const target = shuffledWords[i % poolSize];
+      let type = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+      
+      if (type === "multiple_choice" && target.translation.toLowerCase() === target.word.toLowerCase()) {
+        type = "listen_choice";
+      }
+      
       const id = `test-q-${i}-${Date.now()}`;
 
       if (type === "multiple_choice") {
@@ -118,10 +127,12 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         
         let opts = [];
         if (isTranslationSame) {
-          opts = [target.word, ...words.filter((w) => w.id !== target.id).slice(0, 3).map((w) => w.word)];
+          opts = [target.word, ...words.filter((w) => w.id !== target.id).sort(() => 0.5 - Math.random()).slice(0, 3).map((w) => w.word)];
         } else {
           const clashWords = words.filter((w) => w.id !== target.id && w.translation.toLowerCase() !== w.word.toLowerCase());
-          const finalClash = clashWords.length >= 3 ? clashWords.slice(0, 3) : words.filter((w) => w.id !== target.id).slice(0, 3);
+          const finalClash = clashWords.length >= 3 
+            ? clashWords.sort(() => 0.5 - Math.random()).slice(0, 3) 
+            : words.filter((w) => w.id !== target.id).sort(() => 0.5 - Math.random()).slice(0, 3);
           opts = [target.translation, ...finalClash.map((w) => w.translation)];
         }
         opts = opts.sort(() => 0.5 - Math.random());
@@ -155,7 +166,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         });
       } 
       else if (type === "match_picture") {
-        const slice = [...words].slice(0, 3);
+        const slice = [...words].sort(() => 0.5 - Math.random()).slice(0, 3);
         const pairs = slice.map((w) => ({ image: w.illustration, word: w.word }));
         
         list.push({
@@ -183,12 +194,16 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         let correct = "False";
         
         if (isTrue) {
-          info = isTranslationSame ? `Is this a "${target.word}"?` : `Does "${target.word}" mean "${target.translation}"?`;
+          info = isTranslationSame ? `Is this ${getArticle(target.word)} "${target.word}"?` : `Does "${target.word}" mean "${target.translation}"?`;
           correct = "True";
         } else {
-          const validClash = words.find((w) => w.id !== target.id && w.translation.toLowerCase() !== w.word.toLowerCase());
-          const incorrectOne = validClash || words.find((w) => w.id !== target.id) || target;
-          info = isTranslationSame ? `Is this a "${incorrectOne.word}"?` : `Does "${target.word}" mean "${incorrectOne.translation}"?`;
+          const validClashes = words.filter((w) => w.id !== target.id && w.translation.toLowerCase() !== w.word.toLowerCase());
+          let incorrectOne = validClashes.sort(() => 0.5 - Math.random())[0];
+          if (!incorrectOne) {
+              const anyClashes = words.filter((w) => w.id !== target.id);
+              incorrectOne = anyClashes.sort(() => 0.5 - Math.random())[0] || target;
+          }
+          info = isTranslationSame ? `Is this ${getArticle(incorrectOne.word)} "${incorrectOne.word}"?` : `Does "${target.word}" mean "${incorrectOne.translation}"?`;
           correct = "False";
         }
 
@@ -211,7 +226,15 @@ export const TestEngine: React.FC<TestEngineProps> = ({
   };
 
   const handleTextChoiceClick = (option: string) => {
-    playSound.playTing();
+    if (userAnswers[questions[currentIndex].id]) return; // lock answer after selection
+    
+    const isCorrect = option === questions[currentIndex].correctAnswer;
+    if (isCorrect) {
+      playSound.playTing(); // Ideally a correct sound
+    } else {
+      playSound.playClick(); // Ideally a wrong sound
+    }
+    
     setUserAnswers({ ...userAnswers, [questions[currentIndex].id]: option });
   };
 
@@ -479,19 +502,35 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4 w-full">
-                    {q.options?.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => handleTextChoiceClick(opt)}
-                        className={`p-4 rounded-xl border-4 text-center font-sans font-black text-md transition-all cursor-pointer ${
-                          getActiveSelection() === opt
-                            ? "bg-indigo-100 border-indigo-500 text-indigo-700"
-                            : "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {q.options?.map((opt) => {
+                      const isSelected = getActiveSelection() === opt;
+                      const hasAnswered = getActiveSelection() !== "";
+                      const isCorrect = opt === q.correctAnswer;
+                      
+                      let btnClass = "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700";
+                      if (hasAnswered) {
+                        if (isCorrect) {
+                          btnClass = "bg-green-100 border-green-500 text-green-700";
+                        } else if (isSelected) {
+                          btnClass = "bg-red-100 border-red-500 text-red-700";
+                        } else {
+                          btnClass = "bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed";
+                        }
+                      } else if (isSelected) {
+                        btnClass = "bg-indigo-100 border-indigo-500 text-indigo-700";
+                      }
+
+                      return (
+                        <button
+                          key={opt}
+                          disabled={hasAnswered}
+                          onClick={() => handleTextChoiceClick(opt)}
+                          className={`p-4 rounded-xl border-4 text-center font-sans font-black text-md transition-all ${btnClass}`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -503,19 +542,35 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                     <SoundButton text={q.audioText} size="lg" slow={level === "preschool"} />
                   </div>
                   <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-                    {q.options?.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => handleTextChoiceClick(opt)}
-                        className={`p-4 rounded-xl border-4 text-center font-sans font-black text-md transition-all cursor-pointer ${
-                          getActiveSelection() === opt
-                            ? "bg-indigo-100 border-indigo-500 text-indigo-700"
-                            : "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {q.options?.map((opt) => {
+                      const isSelected = getActiveSelection() === opt;
+                      const hasAnswered = getActiveSelection() !== "";
+                      const isCorrect = opt === q.correctAnswer;
+                      
+                      let btnClass = "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700";
+                      if (hasAnswered) {
+                        if (isCorrect) {
+                          btnClass = "bg-green-100 border-green-500 text-green-700";
+                        } else if (isSelected) {
+                          btnClass = "bg-red-100 border-red-500 text-red-700";
+                        } else {
+                          btnClass = "bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed";
+                        }
+                      } else if (isSelected) {
+                        btnClass = "bg-indigo-100 border-indigo-500 text-indigo-700";
+                      }
+
+                      return (
+                        <button
+                          key={opt}
+                          disabled={hasAnswered}
+                          onClick={() => handleTextChoiceClick(opt)}
+                          className={`p-4 rounded-xl border-4 text-center font-sans font-black text-md transition-all ${btnClass}`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -553,7 +608,6 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                     <div className="flex flex-col gap-2">
                       <p className="text-xs font-black uppercase text-pink-500">Pictures</p>
                       {q.matchPairs.map((pair) => {
-                        // Check if already matches
                         const matchesObj: Record<string, string> = JSON.parse(userAnswers[q.id] || "{}");
                         const isMatched = matchesObj[pair.image] !== undefined;
                         const isSelected = matchingSelectedPic === pair.image;
@@ -565,14 +619,14 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                             onClick={() => selectMatchPic(pair.image)}
                             className={`p-3 rounded-xl border-4 text-center transition-all cursor-pointer ${
                               isMatched
-                                ? "bg-green-50 border-green-300 opacity-60 text-green-700"
+                                ? "bg-slate-100 border-slate-300 opacity-70 text-slate-600"
                                 : isSelected
                                 ? "bg-pink-100 border-pink-400"
                                 : "bg-white border-pink-100 hover:bg-pink-50"
                             }`}
                           >
                             <span className="text-4xl">{pair.image}</span>
-                            {isMatched && <span className="block text-xs font-bold text-green-600">✓ Matched</span>}
+                            {isMatched && <span className="block text-xs font-bold text-slate-500">🔗 Linked</span>}
                           </button>
                         );
                       })}
@@ -597,7 +651,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                               onClick={() => selectMatchWord(word)}
                               className={`p-4 rounded-xl border-4 text-center font-sans font-black transition-all cursor-pointer ${
                                 isMatched
-                                  ? "bg-green-50 border-green-300 opacity-60 text-green-700"
+                                  ? "bg-slate-100 border-slate-300 opacity-70 text-slate-600"
                                   : isSelected
                                   ? "bg-indigo-100 border-indigo-400"
                                   : "bg-white border-indigo-100 hover:bg-indigo-50 text-indigo-800"
@@ -656,21 +710,33 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                 <div className="text-center">
                   {q.imageUrl && <div className="text-8xl mb-4 animate-bounce">{q.imageUrl}</div>}
                   <div className="flex justify-center gap-6 max-w-sm mx-auto">
-                    {q.options?.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => handleTextChoiceClick(opt)}
-                        className={`flex-1 p-6 rounded-2xl border-4 font-sans font-black text-lg md:text-xl transition-all cursor-pointer ${
-                          getActiveSelection() === opt
-                            ? opt === "True"
-                              ? "bg-green-100 border-green-500 text-green-700"
-                              : "bg-red-100 border-red-500 text-red-700"
-                            : "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700"
-                        }`}
-                      >
-                        {opt === "True" ? "True ✓" : "False ✗"}
-                      </button>
-                    ))}
+                    {q.options?.map((opt) => {
+                      const isSelected = getActiveSelection() === opt;
+                      const hasAnswered = getActiveSelection() !== "";
+                      const isCorrect = opt === q.correctAnswer;
+                      
+                      let btnClass = "bg-gray-50 border-gray-200 hover:bg-indigo-50 text-gray-700";
+                      if (hasAnswered) {
+                        if (isCorrect) {
+                          btnClass = "bg-green-100 border-green-500 text-green-700";
+                        } else if (isSelected) {
+                          btnClass = "bg-red-100 border-red-500 text-red-700";
+                        } else {
+                          btnClass = "bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed";
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={opt}
+                          disabled={hasAnswered}
+                          onClick={() => handleTextChoiceClick(opt)}
+                          className={`flex-1 p-6 rounded-2xl border-4 font-sans font-black text-lg md:text-xl transition-all ${btnClass}`}
+                        >
+                          {opt === "True" ? "True ✓" : "False ✗"}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
