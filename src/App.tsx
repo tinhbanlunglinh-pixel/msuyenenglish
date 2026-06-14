@@ -52,6 +52,10 @@ const commonWordsDictClient: Record<string, DictionaryEntry> = {
   "teacher": { translation: "Giáo viên", phonetic: "/ˈtiːtʃə(r)/", sentence: "I love my teacher.", sentenceTranslation: "Tôi yêu cô giáo của tôi." },
   "student": { translation: "Học sinh", phonetic: "/ˈstjuːdnt/", sentence: "I am a good student.", sentenceTranslation: "Tôi là một học sinh ngoan." },
   "classroom": { translation: "Lớp học", phonetic: "/ˈklɑːsruːm/", sentence: "I like my classroom.", sentenceTranslation: "Tôi yêu lớp học của tôi." },
+  "schoolbag": { translation: "Cặp sách", phonetic: "/ˈskuːlbæɡ/", sentence: "I put books in my schoolbag.", sentenceTranslation: "Tôi cất sách vào cặp." },
+  "homework": { translation: "Bài tập về nhà", phonetic: "/ˈhəʊmwɜːk/", sentence: "I do my homework every day.", sentenceTranslation: "Tôi làm bài tập về nhà mỗi ngày." },
+  "playground": { translation: "Sân chơi", phonetic: "/ˈpleɪɡraʊnd/", sentence: "I run in the playground.", sentenceTranslation: "Tôi chạy nhảy ở sân chơi." },
+  "home": { translation: "Nhà", phonetic: "/həʊm/", sentence: "I go home after school.", sentenceTranslation: "Tôi về nhà sau giờ học." },
   "school": { translation: "Trường học", phonetic: "/skuːl/", sentence: "I go to school every day.", sentenceTranslation: "Tôi đi học mỗi ngày." },
   "book": { translation: "Quyển sách", phonetic: "/bʊk/", sentence: "I read a fun book.", sentenceTranslation: "Tôi đọc một quyển sách thú vị." },
   "pencil": { translation: "Bút chì", phonetic: "/ˈtensl/", sentence: "I write with my pencil.", sentenceTranslation: "Tôi vẽ bằng bút chì của tôi." },
@@ -175,6 +179,27 @@ function getFallbackIllustrationClient(word: string): string {
     "eraser": "🧽",
     "ruler": "📏",
     "notebook": "📓",
+    "schoolbag": "🎒",
+    "computer": "💻",
+    "homework": "📝",
+    "home": "🏠",
+    "house": "🏠",
+    "playground": "🛝",
+    "mother": "👩",
+    "father": "👨",
+    "brother": "👦",
+    "sister": "👧",
+    "baby": "👶",
+    "family": "👪",
+    "door": "🚪",
+    "window": "🪟",
+    "bag": "🎒",
+    "board": "📋",
+    "marker": "🖊️",
+    "crayon": "🖍️",
+    "crayons": "🖍️",
+    "hello": "👋",
+    "goodbye": "👋",
     "cat": "🐱",
     "dog": "🐶",
     "bird": "🐦",
@@ -530,6 +555,46 @@ export default function App() {
   const [showStudentRecentLessonsModal, setShowStudentRecentLessonsModal] = useState(false);
   const [hasAutoOpenedRecentLessons, setHasAutoOpenedRecentLessons] = useState(false);
 
+  // Hydration migration: fix old lessons missing translations or fallback illustrations
+  useEffect(() => {
+    let migratedCount = 0;
+    const migrated = lessonsList.map(lesson => {
+      let lessonChanged = false;
+      const newWords = lesson.words.map(w => {
+        if (w.translation.toLowerCase() === w.word.toLowerCase() || !w.translation) {
+          const capitalizedWord = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+          const dictEntry = getOrGenerateEntryClient(capitalizedWord);
+          const newIllustration = getFallbackIllustrationClient(w.word);
+          
+          if (dictEntry && dictEntry.translation.toLowerCase() !== capitalizedWord.toLowerCase()) {
+            lessonChanged = true;
+            return {
+              ...w,
+              translation: dictEntry.translation,
+              phonetic: dictEntry.phonetic,
+              sentence: dictEntry.sentence || w.sentence,
+              sentenceTranslation: dictEntry.sentenceTranslation || w.sentenceTranslation,
+              illustration: newIllustration
+            };
+          } else if (newIllustration !== w.illustration) {
+            lessonChanged = true;
+            return { ...w, illustration: newIllustration };
+          }
+        }
+        return w;
+      });
+      if (lessonChanged) {
+        migratedCount++;
+        return { ...lesson, words: newWords };
+      }
+      return lesson;
+    });
+    
+    if (migratedCount > 0) {
+      setLessonsList(migrated);
+      localStorage.setItem("minion_lessons", JSON.stringify(migrated));
+    }
+  }, []); // Run once on mount
 
   // Auto-connect/link student with the newly created lessons of their class
   useEffect(() => {
@@ -3586,8 +3651,17 @@ export default function App() {
 
                         {/* Mounted Rec module */}
                         <AudioRecorder
+                          key={activeLesson.words[activeWordIdx].id}
                           expectedText={activeLesson.words[activeWordIdx].word}
                           onRecordComplete={handleVocalComplete}
+                          onNext={() => {
+                            if (activeWordIdx < activeLesson.words.length - 1) {
+                              setActiveWordIdx(activeWordIdx + 1);
+                            } else {
+                              setActiveWordIdx(0); // loop back
+                            }
+                            playSound.playClick();
+                          }}
                         />
                       </div>
                     </div>

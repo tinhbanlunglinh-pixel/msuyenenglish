@@ -102,28 +102,31 @@ export const TestEngine: React.FC<TestEngineProps> = ({
       const id = `test-q-${i}-${Date.now()}`;
 
       if (type === "multiple_choice") {
+        const isTranslationSame = target.translation.toLowerCase() === target.word.toLowerCase();
         const opts = [target.word, ...getClashOptions(target, 3)].sort(() => 0.5 - Math.random());
         list.push({
           id,
           type,
-          questionText: `Which English word means: "${target.translation}"?`,
+          questionText: isTranslationSame ? `Look at the picture. What is this? (Nhìn hình và chọn từ đúng)` : `Which word means: "${target.translation}"? (Từ nào có nghĩa là "${target.translation}")`,
           options: opts,
           correctAnswer: target.word,
           imageUrl: target.illustration,
         });
       } 
       else if (type === "listen_choice") {
+        const isTranslationSame = target.translation.toLowerCase() === target.word.toLowerCase();
         const opts = [target.translation, ...words.filter((w) => w.id !== target.id).slice(0, 3).map((w) => w.translation)].sort(() => 0.5 - Math.random());
         list.push({
           id,
           type,
-          questionText: "Listen to the audio and select the correct meaning below:",
+          questionText: isTranslationSame ? "Listen and choose the correct word (Nghe và chọn từ đúng):" : "Listen and choose the correct meaning (Nghe và chọn nghĩa đúng):",
           audioText: target.word,
           options: opts,
           correctAnswer: target.translation,
         });
       } 
       else if (type === "fill_blank") {
+        const isTranslationSame = target.translation.toLowerCase() === target.word.toLowerCase();
         const w = target.word;
         let masked = "";
         if (w.length > 2) {
@@ -136,7 +139,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         list.push({
           id,
           type,
-          questionText: `Complete the missing letter for "${target.translation}": ${masked}`,
+          questionText: isTranslationSame ? `Fill in the missing letter (Điền chữ cái còn thiếu): ${masked}` : `Fill in the missing letter for "${target.translation}" (Điền chữ cái còn thiếu): ${masked}`,
           correctAnswer: target.word.toLowerCase(),
           imageUrl: target.illustration,
         });
@@ -148,7 +151,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         list.push({
           id,
           type,
-          questionText: "Match the pictures with the correct English words:",
+          questionText: "Match each picture with the correct word (Ghép hình ảnh với từ tương ứng):",
           matchPairs: pairs,
           correctAnswer: JSON.stringify(pairs),
         });
@@ -164,16 +167,18 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         });
       } 
       else if (type === "true_false") {
+        const isTranslationSame = target.translation.toLowerCase() === target.word.toLowerCase();
         const isTrue = Math.random() > 0.5;
         let info = "";
         let correct = "False";
         
         if (isTrue) {
-          info = `Does "${target.word}" mean "${target.translation}"?`;
+          info = isTranslationSame ? `Is this a "${target.word}"? (Đây có phải là "${target.word}" không?)` : `Does "${target.word}" mean "${target.translation}"? (Từ "${target.word}" có nghĩa là "${target.translation}" không?)`;
           correct = "True";
         } else {
           const incorrectOne = words.find((w) => w.id !== target.id) || target;
-          info = `Does "${target.word}" mean "${incorrectOne.translation}"?`;
+          const isIncorrectTranslationSame = incorrectOne.translation.toLowerCase() === incorrectOne.word.toLowerCase();
+          info = isTranslationSame ? `Is this a "${incorrectOne.word}"? (Đây có phải là "${incorrectOne.word}" không?)` : `Does "${target.word}" mean "${incorrectOne.translation}"? (Từ "${target.word}" có nghĩa là "${incorrectOne.translation}" không?)`;
           correct = "False";
         }
 
@@ -442,17 +447,17 @@ export const TestEngine: React.FC<TestEngineProps> = ({
             <div className="w-full">
               {/* Question Type tag */}
               <div className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1 mb-4 text-xs font-sans font-black text-indigo-600 uppercase">
-                {q.type === "multiple_choice" && "Multiple Choice"}
-                {q.type === "listen_choice" && "Listening Quiz 🎧"}
-                {q.type === "fill_blank" && "Fill in the blank 🧩"}
-                {q.type === "match_picture" && "Picture Matching ⭐"}
-                {q.type === "arrange_sentence" && "Sentence Builder 👑"}
-                {q.type === "true_false" && "True or False 🎯"}
+                {q.type === "multiple_choice" && "Chọn Đáp Án Đúng"}
+                {q.type === "listen_choice" && "Nghe & Chọn 🎧"}
+                {q.type === "fill_blank" && "Điền Chữ Còn Thiếu 🧩"}
+                {q.type === "match_picture" && "Nối Hình & Từ ⭐"}
+                {q.type === "arrange_sentence" && "Xếp Câu Hoàn Chỉnh 👑"}
+                {q.type === "true_false" && "Đúng hay Sai? 🎯"}
               </div>
 
               {/* Dynamic content rendering */}
               <h3 className="font-sans font-black text-lg md:text-xl text-gray-800 leading-snug mb-6">
-                {q.questionText}
+                {q.type === "arrange_sentence" ? "Arrange the words to make a sentence (Sắp xếp các từ để tạo thành câu hoàn chỉnh):" : q.questionText}
               </h3>
 
               {/* QUESTION FORM 1: Multiple choice standard with illustration */}

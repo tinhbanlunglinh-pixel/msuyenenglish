@@ -117,20 +117,24 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
       setAssembledSentence([]);
     } 
     else if (currentGameType === "balloon_pop") {
+      // Pick up to 6 random words, making sure target is in them
+      const shuffled = [...words].sort(() => 0.5 - Math.random());
+      const selectedWords = shuffled.slice(0, Math.min(6, words.length));
+      
       // Target word to pop
-      const target = words[Math.floor(Math.random() * words.length)];
+      const target = selectedWords[Math.floor(Math.random() * selectedWords.length)];
       setBalloonTarget(target);
 
       const colors = ["bg-rose-400", "bg-sky-400", "bg-emerald-400", "bg-amber-400", "bg-purple-400", "bg-orange-400"];
       
-      // Make 6 distinct balloon objects floating
-      const list = words.map((w, idx) => ({
+      // Make distinct balloon objects floating
+      const list = selectedWords.map((w, idx) => ({
         id: `bal-${idx}-${w.id}`,
         emoji: w.illustration,
         word: w.word,
         color: colors[idx % colors.length],
         popped: false,
-        x: 10 + idx * 14, // spacing in %
+        x: 10 + (idx * (80 / Math.max(1, selectedWords.length - 1))), // distribute evenly from 10% to 90%
         y: 60 + (idx % 2) * 20, // offset heights
         speed: 1 + Math.random() * 1.5,
       }));
@@ -319,11 +323,11 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
           <span className="text-3xl">🎮</span>
           <div>
             <h3 className="font-sans font-black text-sky-800 text-lg md:text-xl">
-              {currentGameType === "listen_match" && "1. Nghe & Chọn Hình 🎧"}
-              {currentGameType === "look_match" && "2. Nhìn Hình Đoán Từ 🎨"}
-              {currentGameType === "match_meaning" && "3. Ghép Cặp Từ Vựng 🧩"}
-              {currentGameType === "arrange_sentence" && "4. Sắp Xếp Câu Tiếng Anh 🔠"}
-              {currentGameType === "balloon_pop" && "5. Bắn Bóng Bay Từ Vựng 🎈"}
+              {currentGameType === "listen_match" && "1. Nghe & Chọn Hình (Listen & Match) 🎧"}
+              {currentGameType === "look_match" && "2. Nhìn Hình Đoán Từ (Look & Guess) 🎨"}
+              {currentGameType === "match_meaning" && "3. Ghép Cặp Từ Vựng (Match Meaning) 🧩"}
+              {currentGameType === "arrange_sentence" && "4. Xếp Câu Tiếng Anh (Sentence Builder) 🔠"}
+              {currentGameType === "balloon_pop" && "5. Bắn Bóng Bay (Balloon Pop) 🎈"}
             </h3>
             <p className="text-xs text-sky-500 font-sans font-bold uppercase tracking-wider">
               Thử Thách Luyện Tập {gameIndex + 1} / {gameOrder.length}
@@ -435,7 +439,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
             {currentGameType === "listen_match" && targetWord && (
               <div className="text-center">
                 <p className="text-sky-600 font-bold mb-4">
-                  Click the speaker to listen and choose the correct picture!
+                  Bấm vào loa để nghe và chọn hình ảnh đúng nhé! (Click to listen & choose)
                 </p>
                 <div className="flex justify-center mb-6">
                   <SoundButton text={targetWord.word} size="lg" slow />
@@ -476,7 +480,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
             {currentGameType === "look_match" && targetWord && (
               <div className="text-center">
                 <p className="text-sky-600 font-bold mb-4">
-                  What is this? Choose the correct English word!
+                  Đây là gì nhỉ? Hãy chọn từ tiếng Anh tương ứng! (What is this?)
                 </p>
                 <div className="flex justify-center mb-6">
                   <motion.div
@@ -515,7 +519,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
             {currentGameType === "match_meaning" && (
               <div className="text-center">
                 <p className="text-sky-600 font-bold mb-6">
-                  Task: Match English words with their meanings!
+                  Ghép từ tiếng Anh với nghĩa đúng của chúng! (Match words with meanings!)
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 sm:gap-6 md:gap-8 max-w-2xl mx-auto">
@@ -547,7 +551,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
 
                   {/* Meaning Column */}
                   <div className="flex flex-col gap-2.5">
-                    <h5 className="font-sans font-bold text-orange-600 text-xs sm:text-sm mb-2 uppercase tracking-wide">English Meaning</h5>
+                    <h5 className="font-sans font-bold text-orange-600 text-xs sm:text-sm mb-2 uppercase tracking-wide">Vietnamese Meaning</h5>
                     {vocabShuffledVietnamese.map((item) => {
                       // Check if matches
                       const isMatched = matchedPairs.includes(item.word);
@@ -579,7 +583,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
             {currentGameType === "arrange_sentence" && targetWord && (
               <div className="text-center">
                 <p className="text-sky-600 font-bold mb-2">
-                  Arrange the word cards to make a complete sentence containing{" "}
+                  Sắp xếp các thẻ chữ để tạo thành một câu hoàn chỉnh có chứa từ{" "}
                   <span className="font-extrabold text-purple-600">"{targetWord.word}"</span>!
                 </p>
                 
@@ -608,7 +612,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
                   ))}
                   {assembledSentence.length === 0 && (
                     <span className="text-sm text-gray-400 font-mono italic flex items-center">
-                      (Click words below to arrange)
+                      (Bấm vào các từ bên dưới để xếp câu)
                     </span>
                   )}
                 </div>
@@ -637,7 +641,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
                     onClick={checkSentenceSubmit}
                     className="px-6 py-2 rounded-xl bg-green-500 text-white font-sans font-black shadow hover:bg-green-600 cursor-pointer"
                   >
-                    Check Sentence 🚀
+                    Kiểm Tra Câu 🚀
                   </motion.button>
                 )}
               </div>
@@ -647,7 +651,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
             {currentGameType === "balloon_pop" && balloonTarget && (
               <div className="text-center relative">
                 <p className="text-sky-600 font-bold mb-3">
-                  Pop the balloon that matches:{" "}
+                  Bắn quả bóng có từ mang nghĩa là:{" "}
                   <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full font-sans font-black text-sm">
                     "{balloonTarget.translation}"
                   </span>

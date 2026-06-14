@@ -11,11 +11,13 @@ import { playSound } from "../utils/audioSynth";
 interface AudioRecorderProps {
   expectedText?: string;
   onRecordComplete?: (audioUrl: string) => void;
+  onNext?: () => void;
 }
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   expectedText = "Hello",
   onRecordComplete,
+  onNext,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -181,10 +183,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     <div className="flex flex-col items-center bg-amber-50 rounded-2xl p-6 border-4 border-dashed border-amber-300 shadow-inner max-w-md w-full mx-auto">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
-        <h4 className="font-sans font-black text-amber-900 text-md">Bé Luyện Đọc Phát Âm</h4>
+        <h4 className="font-sans font-black text-amber-900 text-md">Bé Luyện Phát Âm (Speaking Practice)</h4>
       </div>
       <p className="text-sm text-amber-700 text-center mb-4 font-bold">
-        Đọc to câu sau: <span className="font-black text-purple-600 bg-white px-2 py-0.5 rounded shadow-sm">"{expectedText}"</span>
+        Đọc to từ/câu sau (Read aloud): <span className="font-black text-purple-600 bg-white px-2 py-0.5 rounded shadow-sm">"{expectedText}"</span>
       </p>
 
       {/* Visual Canvas Area */}
@@ -256,11 +258,19 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           <div className="text-2xl font-sans font-black text-green-600">
             Kết quả của bé: <span className="text-3xl text-orange-500">{score}/10</span> điểm
           </div>
-          <p className="text-xs text-slate-500 mt-1 font-bold">
+          <p className="text-xs text-slate-500 mt-1 font-bold mb-3">
             {score === 10 && "🌟 Tuyệt vời! Phát âm cực kỳ chuẩn xác như người bản xứ!"}
             {score === 9 && "👏 Rất tốt! Bé phát âm rất rõ ràng và chuẩn ngữ điệu!"}
             {score === 8 && "👍 Giỏi quá! Bé tiếp tục luyện tập để phát âm hay hơn nữa nhé!"}
           </p>
+          {onNext && (
+            <button
+              onClick={onNext}
+              className="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-full font-sans font-black text-sm flex items-center gap-2 shadow-md cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            >
+              Từ Tiếp Theo ➡️
+            </button>
+          )}
         </motion.div>
       )}
     </div>
