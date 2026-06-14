@@ -30,6 +30,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
   const [failedCurrentGame, setFailedCurrentGame] = useState(false);
   const TOTAL_GAMES = 5;
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [lives, setLives] = useState(3);
 
   // States for individual games
   const [shuffledOptions, setShuffledOptions] = useState<VocabularyItem[]>([]);
