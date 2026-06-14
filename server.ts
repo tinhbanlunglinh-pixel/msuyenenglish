@@ -359,22 +359,22 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
 
       prompt = `Please analyze the uploaded document or image to extract English vocabulary words and complete sentences appropriate for this level: ${ageRange}.
 
-CRITICAL PRESERVATION & VIETNAMESE-TRANSLATION RULES:
-1. Carefully read and extract ALL of the English words and example sentences appearing visually in the uploaded file/image. Do NOT limit or truncate the list – extract every single word found in the source material.
-2. PRESERVE ORIGINAL CONTENT: Retain the exact English words and their matching visual sentences. Only correct minor typos. Do not replace them with unrelated vocabulary.
+CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
+1. PRESERVE ORIGINAL CONTENT: You MUST extract and output the EXACT English words and matching sentences appearing in the uploaded file/image. Do NOT create, alter, or replace them with custom sentences or vocabulary. Keep them exactly as they are in the file. Do not be creative.
+2. GRAMMATICAL ACCURACY: Double check all English grammar. Every sentence must be grammatically correct and natural for children.
 3. Every card must have a word and a matching sentence.
-4. If the file contains only full sentences but no isolated words, extract keywords from those sentences to use as "word", and use the visual sentence as "sentence".
-5. If the file contains only isolated words but no sentences, design short, encouraging, and playful sentences in English including that word.
-6. IMPORTANT TRANSLATION RULE:
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations or synonyms. For example, if the word is 'Apple', translation must be 'Quả táo'.
-- The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'. Do NOT include English text or explanations.
+4. If the file contains only full sentences but no isolated words, extract keywords from those sentences to use as "word", and use the exact visual sentence as "sentence".
+5. If the file contains only isolated words but no sentences, write short, grammatically perfect, and simple sentences containing that word.
+6. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English words, explanations, or definitions. For example, if the word is 'Apple', translation must be 'Quả táo'.
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
 7. Each vocabulary item in the list must feature:
 - word: The English vocabulary word with first letters capitalized.
-- translation: The exact Vietnamese translation/meaning of the English word. e.g. "Con mèo" or "Chiếc bút chì".
+- translation: The exact Vietnamese translation/meaning.
 - phonetic: Accurate IPA phonetics (for example, '/kæt/').
-- sentence: The English example sentence (preserved from the file if available).
-- sentenceTranslation: The exact Vietnamese translation of the example sentence. e.g. "Chú mèo nhỏ kêu meow meow."
-- illustration: Exactly one colorful, vivid, child-pleasing Emoji representing the word.`;
+- sentence: The English example sentence (preserved from the file exactly).
+- sentenceTranslation: The exact Vietnamese translation of the sentence.
+- illustration: Exactly one colorful, vivid Emoji representing the word.`;
       
       if (topic) {
         prompt += `\nAdditional Focus: Prioritize and guide the selection of these vocabulary words around this topic: "${topic}".`;
@@ -391,21 +391,21 @@ TOTAL INPUT COUNT: The user has provided exactly ${inputCount} words/items. You 
 The ${inputCount} input items are:
 ${inputItems.map((item: string, i: number) => `${i + 1}. "${item}"`).join('\n')}
 
-CRITICAL PRESERVATION & VIETNAMESE-TRANSLATION RULES:
-1. PRESERVE ORIGINAL CONTENT: Keep and extract ALL ${inputCount} exact English words found in the text. Do NOT limit, truncate, or select a subset of the input; you must generate a vocabulary card for EVERY SINGLE one of the ${inputCount} input words or phrases provided. Output array length MUST be ${inputCount}.
-2. If the text has example sentences or full phrases, you MUST keep those exact sentences inside the "sentence" field. Do not invent custom ones if the text has original sentences.
-3. If the text consists only of isolated words, draft very clean, simple, and delightful English sentences containing that word, suitable for ${level || "Starters"}.
+CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
+1. PRESERVE ORIGINAL CONTENT: Keep and extract ALL ${inputCount} exact English words/phrases found in the text. Do NOT modify, replace, or select a subset of the input. Output array length MUST be ${inputCount}.
+2. If the text has example sentences or full phrases, you MUST keep those exact sentences inside the "sentence" field. Do not invent custom ones if the text has original sentences. Do not be creative (không sáng tạo).
+3. If the text consists only of isolated words, draft very clean, simple, grammatically perfect English sentences containing that word, suitable for ${level || "Starters"}. Ensure the sentences are 100% grammatically correct.
 4. If the text has only sentences but no keywords, extract key words to use as "word", and keep the visual sentence for the "sentence" field.
-5. IMPORTANT TRANSLATION RULE:
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations or synonyms. For example, if the word is 'Apple', translation must be 'Quả táo'.
-- The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'. Do NOT include English text or explanations.
+5. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations, or definitions.
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
 6. Provide fully detailed fields for each word as requested:
 - word: The English word.
-- translation: The direct Vietnamese translation (meaning) of the word.
+- translation: The direct Vietnamese translation.
 - phonetic: Correct IPA phonetic representation.
 - sentence: The English example sentence.
-- sentenceTranslation: The matching Vietnamese translation of the English example sentence.
-- illustration: Exactly one cute, sparkling, kid-friendly emoji representing the word.
+- sentenceTranslation: The matching Vietnamese translation.
+- illustration: Exactly one cute emoji representing the word.
 
 FINAL REMINDER: Your output MUST contain exactly ${inputCount} items in the "words" array. Count them before responding.`;
     } else if (topic) {
@@ -413,18 +413,20 @@ FINAL REMINDER: Your output MUST contain exactly ${inputCount} items in the "wor
 The topic is: "${topic}".
 You MUST select exactly ${currentLevelConfig.wordCount} highly useful, fun, and level-appropriate English vocabulary words for this topic. The number of words in the output array MUST be ${currentLevelConfig.wordRange} items.
 
-LEVEL-APPROPRIATE VOCABULARY RULES:
+LEVEL-APPROPRIATE VOCABULARY & GRAMMAR RULES:
 - Word difficulty MUST match the level: ${ageRange}
 - ${currentLevelConfig.sentenceRule}
+- GRAMMATICAL ACCURACY: Every sentence you generate MUST be 100% grammatically correct and natural. Avoid run-on sentences (like "I like my teacher is very kind" which is wrong). Write them correctly, e.g., "I like my kind teacher." or "My teacher is very kind. I like her."
 
-IMPORTANT TRANSLATION RULE:
+TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations or synonyms.
-- The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'.
+- The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
+
 For each word, fill:
 - word: The English word with first letter capitalized. Word complexity must match the level.
-- translation: The direct Vietnamese translation (meaning) of the English word.
+- translation: The direct Vietnamese translation of the English word.
 - phonetic: Accurate IPA pronunciation (for example: '/dɒɡ/').
-- sentence: An English sentence containing the word. ${currentLevelConfig.sentenceRule}
+- sentence: An English sentence containing the word.
 - sentenceTranslation: The matching Vietnamese translation of the English example sentence.
 - illustration: Exactly one glowing, colorful, delightful emoji representing the word.
 
@@ -454,7 +456,14 @@ REMINDER: Output MUST contain ${currentLevelConfig.wordCount} vocabulary items. 
           model: modelName,
           contents: contentsPayload,
           config: {
-            systemInstruction: `You are an expert children's English educator and pediatric speech language pathologist specializing in infant and primary school education. Create highly engaging, simple, positive, playful, and developmentally appropriate English lessons. Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields. CRITICAL REQUIREMENT FOR TRANSLATION: You must write the English words and sentences in their respective fields (word, sentence), but the 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT write English explanations or definitions in these translation fields. If the user provides explicit English words or sentences, you MUST preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated generic words. Every vocabulary item in your JSON output must feature both the core vocabulary word ('word') and the associated example sentence ('sentence'). ABSOLUTE RULE ON QUANTITY: When the user provides a list of N words, you MUST output EXACTLY N vocabulary items. Never output fewer items than the user provided. Count the input items and ensure your output array has the same count. Truncating or reducing the user's word list is STRICTLY FORBIDDEN.`,
+            systemInstruction: `You are an expert children's English teacher with many years of experience (giáo viên tiếng Anh tiểu học và mầm non nhiều năm kinh nghiệm).
+Your English sentences MUST be 100% grammatically correct, natural, simple, and age-appropriate for kids. Never write grammatically incorrect sentences or run-on sentences.
+Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields.
+
+CRITICAL RULES:
+1. PURE VIETNAMESE TRANSLATION (KHÔNG DỊCH TRỘN TIẾNG ANH): The 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT mix English words, explanations, or definitions into these translation fields (e.g., never write "Tớ thích my teacher is very kind" as a translation).
+2. PRESERVE ORIGINAL CONTENT (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO): If the user provides explicit English words, text, or uploads a document/image, you must preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated words, do not create new custom sentences if the input already contains sentences. Do not be creative.
+3. ABSOLUTE RULE ON QUANTITY: When the user provides a list of N words, you MUST output EXACTLY N vocabulary items. Never output fewer items than the user provided. Count the input items and ensure your output array has the same count. Truncating or reducing the user's word list is STRICTLY FORBIDDEN.`,
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -493,7 +502,7 @@ REMINDER: Output MUST contain ${currentLevelConfig.wordCount} vocabulary items. 
                       },
                       illustration: {
                         type: Type.STRING,
-                        description: "Exactly ONE colourful symbol emoji representing the word, e.g. '🐶'",
+                        description: "Exactly ONE colourful symbol emoji representing the word, e.g., '🐶'",
                       },
                     },
                   },
