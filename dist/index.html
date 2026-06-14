@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Shield against read-only window.fetch error in secure iframe environments/extensions
+      try {
+        if (window && !Object.getOwnPropertyDescriptor(window, 'fetch')?.set) {
+          const originalFetch = window.fetch;
+          let currentFetch = originalFetch;
+          Object.defineProperty(window, 'fetch', {
+            get() { return currentFetch; },
+            set(val) { currentFetch = val; },
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e) {
+        console.warn("Fetch guard initialization skipped:", e);
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BU8a5FO0.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CVFQ-ODs.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+

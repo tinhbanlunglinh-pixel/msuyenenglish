@@ -326,48 +326,48 @@ function getFallbackTranslation(english: string): string {
 // Prevents lazy AI translation (e.g. Teacher -> Teacher) or phonetic
 // placeholder generations (e.g. /teacher/).
 // ----------------------------------------------------------------
-const commonWordsDict: Record<string, { translation: string, phonetic: string }> = {
-  "teacher": { translation: "Giáo viên", phonetic: "/ˈtiːtʃə(r)/" },
-  "student": { translation: "Học sinh", phonetic: "/ˈstjuːdnt/" },
-  "classroom": { translation: "Lớp học", phonetic: "/ˈklɑːsruːm/" },
-  "school": { translation: "Trường học", phonetic: "/skuːl/" },
-  "book": { translation: "Quyển sách", phonetic: "/bʊk/" },
-  "pencil": { translation: "Bút chì", phonetic: "/ˈtensl/" },
-  "desk": { translation: "Bàn học", phonetic: "/desk/" },
-  "chair": { translation: "Ghế", phonetic: "/tʃeə(r)/" },
-  "blackboard": { translation: "Bảng đen", phonetic: "/ˈblækbɔːd/" },
-  "pen": { translation: "Bút mực", phonetic: "/pen/" },
-  "eraser": { translation: "Cục tẩy", phonetic: "/ɪˈreɪzə(r)/" },
-  "ruler": { translation: "Thước kẻ", phonetic: "/ˈruːlə(r)/" },
-  "notebook": { translation: "Vở ghi", phonetic: "/ˈnəʊtbʊk/" },
-  "cat": { translation: "Con mèo", phonetic: "/kæt/" },
-  "dog": { translation: "Con chó", phonetic: "/dɒɡ/" },
-  "bird": { translation: "Con chim", phonetic: "/bɜːd/" },
-  "monkey": { translation: "Con khỉ", phonetic: "/ˈmʌŋki/" },
-  "rabbit": { translation: "Con thỏ", phonetic: "/ˈræbɪt/" },
-  "lion": { translation: "Sư tử", phonetic: "/ˈlaɪən/" },
-  "elephant": { translation: "Con voi", phonetic: "/ˈelɪfənt/" },
-  "frog": { translation: "Con ếch", phonetic: "/frɒɡ/" },
-  "apple": { translation: "Quả táo", phonetic: "/ˈæpl/" },
-  "banana": { translation: "Quả chuối", phonetic: "/bəˈnɑːnə/" },
-  "orange": { translation: "Quả cam / Màu cam", phonetic: "/ˈɒrɪndʒ/" },
-  "hello": { translation: "Xin chào", phonetic: "/həˈləʊ/" },
-  "goodbye": { translation: "Tạm biệt", phonetic: "/ˌɡʊdˈbaɪ/" },
-  "mother": { translation: "Mẹ", phonetic: "/ˈmʌðə(r)/" },
-  "father": { translation: "Bố", phonetic: "/ˈfɑːðə(r)/" },
-  "brother": { translation: "Anh/Em trai", phonetic: "/ˈbrʌðə(r)/" },
-  "sister": { translation: "Chị/Em gái", phonetic: "/ˈsɪstə(r)/" },
-  "baby": { translation: "Em bé", phonetic: "/ˈbeɪbi/" },
-  "family": { translation: "Gia đình", phonetic: "/ˈfæməli/" },
-  "house": { translation: "Ngôi nhà", phonetic: "/haʊs/" },
-  "door": { translation: "Cửa ra vào", phonetic: "/dɔː(r)/" },
-  "window": { translation: "Cửa sổ", phonetic: "/ˈwɪndəʊ/" },
-  "bag": { translation: "Cặp sách", phonetic: "/bæɡ/" },
-  "board": { translation: "Bảng học", phonetic: "/bɔːd/" },
-  "marker": { translation: "Bút viết bảng", phonetic: "/ˈmɑːkə(r)/" },
-  "computer": { translation: "Máy tính", phonetic: "/kəmˈpjuːtə(r)/" },
-  "crayon": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒn/" },
-  "crayons": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒnz/" },
+const commonWordsDict: Record<string, DictionaryEntry> = {
+  "teacher": { translation: "Giáo viên", phonetic: "/ˈtiːtʃə(r)/", sentence: "I love my teacher.", sentenceTranslation: "Tôi yêu cô giáo của tôi." },
+  "student": { translation: "Học sinh", phonetic: "/ˈstjuːdnt/", sentence: "I am a good student.", sentenceTranslation: "Tôi là một học sinh ngoan." },
+  "classroom": { translation: "Lớp học", phonetic: "/ˈklɑːsruːm/", sentence: "I like my classroom.", sentenceTranslation: "Tôi yêu lớp học của tôi." },
+  "school": { translation: "Trường học", phonetic: "/skuːl/", sentence: "I go to school every day.", sentenceTranslation: "Tôi đi học mỗi ngày." },
+  "book": { translation: "Quyển sách", phonetic: "/bʊk/", sentence: "I read a fun book.", sentenceTranslation: "Tôi đọc một quyển sách thú vị." },
+  "pencil": { translation: "Bút chì", phonetic: "/ˈtensl/", sentence: "I write with my pencil.", sentenceTranslation: "Tôi vẽ bằng bút chì của tôi." },
+  "desk": { translation: "Bàn học", phonetic: "/desk/", sentence: "I sit at my desk.", sentenceTranslation: "Tôi ngồi ở bàn học của tôi." },
+  "chair": { translation: "Ghế", phonetic: "/tʃeə(r)/", sentence: "I sit on my chair.", sentenceTranslation: "Tôi ngồi trên ghế của tôi." },
+  "blackboard": { translation: "Bảng đen", phonetic: "/ˈblækbɔːd/", sentence: "The teacher writes on the blackboard.", sentenceTranslation: "Cô giáo viết trên bảng đen." },
+  "pen": { translation: "Bút mực", phonetic: "/pen/", sentence: "I write with my pen.", sentenceTranslation: "Tôi viết bằng bút mực của tôi." },
+  "eraser": { translation: "Cục tẩy", phonetic: "/ɪˈreɪzə(r)/", sentence: "I rub with my eraser.", sentenceTranslation: "Tôi tẩy bằng cục tẩy của tôi." },
+  "ruler": { translation: "Thước kẻ", phonetic: "/ˈruːlə(r)/", sentence: "I use my ruler to draw lines.", sentenceTranslation: "Tôi dùng thước kẻ để vẽ các đường thẳng." },
+  "notebook": { translation: "Vở ghi", phonetic: "/ˈnəʊtbʊk/", sentence: "I write in my notebook.", sentenceTranslation: "Tôi viết vào vở của tôi." },
+  "cat": { translation: "Con mèo", phonetic: "/kæt/", sentence: "I like my cat.", sentenceTranslation: "Tôi yêu con mèo của tôi." },
+  "dog": { translation: "Con chó", phonetic: "/dɒɡ/", sentence: "I like my dog.", sentenceTranslation: "Tôi yêu con chó của tôi." },
+  "bird": { translation: "Con chim", phonetic: "/bɜːd/", sentence: "The bird sings sweet songs.", sentenceTranslation: "Chú chim hót những khúc ca ngọt ngào." },
+  "monkey": { translation: "Con khỉ", phonetic: "/ˈmʌŋki/", sentence: "The monkey eats sweet bananas.", sentenceTranslation: "Chú khỉ ăn những quả chuối ngọt lịm." },
+  "rabbit": { translation: "Con thỏ", phonetic: "/ˈræbɪt/", sentence: "The white rabbit hops fast.", sentenceTranslation: "Chú thỏ trắng nhảy thật nhanh." },
+  "lion": { translation: "Sư tử", phonetic: "/ˈlaɪən/", sentence: "The big lion rules the jungle.", sentenceTranslation: "Sư tử to lớn thống trị khu rừng." },
+  "elephant": { translation: "Con voi", phonetic: "/ˈelɪfənt/", sentence: "The elephant has a very long nose.", sentenceTranslation: "Chú voi có một chiếc mũi rất dài." },
+  "frog": { translation: "Con ếch", phonetic: "/frɒɡ/", sentence: "The green frog jumps high.", sentenceTranslation: "Chú ếch xanh nhảy thật cao." },
+  "apple": { translation: "Quả táo", phonetic: "/ˈæpl/", sentence: "I eat a crunchy red apple.", sentenceTranslation: "Tôi ăn một quả táo đỏ giòn rụm." },
+  "banana": { translation: "Quả chuối", phonetic: "/bəˈnɑːnə/", sentence: "I love eating sweet yellow bananas.", sentenceTranslation: "Tôi thích ăn những quả chuối vàng ngọt lịm." },
+  "orange": { translation: "Quả cam", phonetic: "/ˈɒrɪndʒ/", sentence: "I drink orange juice in the morning.", sentenceTranslation: "Tôi uống nước cam vào buổi sáng." },
+  "hello": { translation: "Xin chào", phonetic: "/həˈləʊ/", sentence: "I say hello to my friends.", sentenceTranslation: "Tôi chào các bạn của tôi." },
+  "goodbye": { translation: "Tạm biệt", phonetic: "/ˌɡʊdˈbaɪ/", sentence: "I say goodbye to my teacher.", sentenceTranslation: "Tôi chào tạm biệt cô giáo của tôi." },
+  "mother": { translation: "Mẹ", phonetic: "/ˈmʌðə(r)/", sentence: "I love my mother very much.", sentenceTranslation: "Tôi yêu mẹ của tôi rất nhiều." },
+  "father": { translation: "Bố", phonetic: "/ˈfɑːðə(r)/", sentence: "My father plays games with me.", sentenceTranslation: "Bố chơi trò chơi với tôi." },
+  "brother": { translation: "Anh/Em trai", phonetic: "/ˈbrʌðə(r)/", sentence: "I play football with my brother.", sentenceTranslation: "Tôi chơi đá bóng với anh/em trai của tôi." },
+  "sister": { translation: "Chị/Em gái", phonetic: "/ˈsɪstə(r)/", sentence: "I share my toys with my sister.", sentenceTranslation: "Tôi chia sẻ đồ chơi với chị/em gái của tôi." },
+  "baby": { translation: "Em bé", phonetic: "/ˈbeɪbi/", sentence: "The cute baby is sleeping.", sentenceTranslation: "Em bé đáng yêu đang ngủ." },
+  "family": { translation: "Gia đình", phonetic: "/ˈfæməli/", sentence: "I love my happy family.", sentenceTranslation: "Tôi yêu gia đình hạnh phúc của tôi." },
+  "house": { translation: "Ngôi nhà", phonetic: "/haʊs/", sentence: "This is my lovely house.", sentenceTranslation: "Đây là ngôi nhà đáng yêu của tôi." },
+  "door": { translation: "Cửa ra vào", phonetic: "/dɔː(r)/", sentence: "I open the door for my mom.", sentenceTranslation: "Tôi mở cửa cho mẹ." },
+  "window": { translation: "Cửa sổ", phonetic: "/ˈwɪndəʊ/", sentence: "I look out of the window.", sentenceTranslation: "Tôi nhìn ra ngoài cửa sổ." },
+  "bag": { translation: "Cặp sách", phonetic: "/bæɡ/", sentence: "I pack my books into my bag.", sentenceTranslation: "Tôi xếp sách vào cặp học sinh." },
+  "board": { translation: "Bảng học", phonetic: "/bɔːd/", sentence: "Please look at the board.", sentenceTranslation: "Xin vui lòng nhìn lên bảng." },
+  "marker": { translation: "Bút viết bảng", phonetic: "/ˈmɑːkə(r)/", sentence: "I write on the white board with a marker.", sentenceTranslation: "Tôi viết lên bảng trắng bằng bút lông." },
+  "computer": { translation: "Máy tính", phonetic: "/kəmˈpjuːtə(r)/", sentence: "We learn English on the computer.", sentenceTranslation: "Chúng tôi học tiếng Anh trên máy tính." },
+  "crayon": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒn/", sentence: "I draw a picture with my crayon.", sentenceTranslation: "Tôi vẽ một bức tranh bằng bút sáp màu của tôi." },
+  "crayons": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒnz/", sentence: "I color with my crayons.", sentenceTranslation: "Tôi tô màu bằng bút sáp màu của tôi." },
   "paper": { translation: "Tờ giấy", phonetic: "/ˈpeɪpə(r)/" },
   "table": { translation: "Cái bàn", phonetic: "/ˈteɪbl/" },
   "clock": { translation: "Đồng hồ", phonetic: "/klɒk/" },
@@ -435,6 +435,57 @@ const commonWordsDict: Record<string, { translation: string, phonetic: string }>
   "ten": { translation: "Số mười", phonetic: "/ten/" }
 };
 
+interface DictionaryEntry {
+  translation: string;
+  phonetic: string;
+  sentence?: string;
+  sentenceTranslation?: string;
+}
+
+function getOrGenerateEntry(word: string): DictionaryEntry | undefined {
+  const key = word.toLowerCase().trim();
+  const cleanKey = key.endsWith(".") ? key.slice(0, -1).trim() : key;
+  const entry = commonWordsDict[key] || commonWordsDict[cleanKey];
+  if (!entry) return undefined;
+  
+  if (entry.sentence && entry.sentenceTranslation) {
+    return entry;
+  }
+  
+  // Heuristic sentence generation
+  let sentence = "";
+  let sentenceTranslation = "";
+  const translation = entry.translation;
+  
+  // Check if it is a color
+  const colors = ["red", "blue", "green", "yellow", "pink", "purple", "black", "white", "brown", "grey", "gray"];
+  // Check if it is a number
+  const numbers = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+  // Check if it is a greeting
+  const greetings = ["hello", "goodbye"];
+  
+  if (colors.includes(cleanKey)) {
+    sentence = `I like ${cleanKey}.`;
+    sentenceTranslation = `Tôi thích màu ${translation.toLowerCase()}.`;
+  } else if (numbers.includes(cleanKey)) {
+    sentence = `I have ${cleanKey} apples.`;
+    sentenceTranslation = `Tôi có ${translation.toLowerCase()} quả táo.`;
+  } else if (greetings.includes(cleanKey)) {
+    sentence = `I say ${cleanKey} to you.`;
+    sentenceTranslation = `Tôi nói ${translation.toLowerCase()} với bạn.`;
+  } else {
+    // Standard singular countable noun heuristic
+    sentence = `I like my ${cleanKey}.`;
+    sentenceTranslation = `Tôi yêu ${translation.toLowerCase()} của tôi.`;
+  }
+  
+  return {
+    ...entry,
+    sentence,
+    sentenceTranslation
+  };
+}
+
 function cleanAndFixVocabularyItem(w: any): any {
   if (!w || typeof w !== "object") return w;
   
@@ -451,7 +502,7 @@ function cleanAndFixVocabularyItem(w: any): any {
   // 2. Correct translation if it is identical to the English word
   const isLazyTranslation = String(w.translation || "").toLowerCase().trim() === wordKey;
   
-  const dictEntry = commonWordsDict[wordKey] || commonWordsDict[cleanWordKey];
+  const dictEntry = getOrGenerateEntry(rawWord);
   
   if (dictEntry) {
     if (isLazyTranslation) {
@@ -459,6 +510,21 @@ function cleanAndFixVocabularyItem(w: any): any {
     }
     if (isLazyPhonetic) {
       w.phonetic = dictEntry.phonetic;
+    }
+    
+    // Correct lazy sentences (e.g., "I like classroom." or containing English inside translation)
+    const currentSentenceLower = String(w.sentence || "").toLowerCase().trim();
+    const isLazySentence = !w.sentence || currentSentenceLower === "" || 
+                           currentSentenceLower === `i like ${wordKey}.` ||
+                           currentSentenceLower === `i like ${cleanWordKey}.` ||
+                           currentSentenceLower === `i like ${wordKey}` ||
+                           currentSentenceLower === `i like ${cleanWordKey}`;
+    
+    if (isLazySentence && dictEntry.sentence) {
+      w.sentence = dictEntry.sentence;
+      if (dictEntry.sentenceTranslation) {
+        w.sentenceTranslation = dictEntry.sentenceTranslation;
+      }
     }
   }
   
@@ -580,8 +646,8 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
     // Level-specific configuration for word count and sentence complexity
     const levelConfig: Record<string, { wordCount: string; wordRange: string; ageRange: string; sentenceRule: string }> = {
       "pre-starter": {
-        wordCount: "4 to 5",
-        wordRange: "4-5",
+        wordCount: "4",
+        wordRange: "4",
         ageRange: "Pre-Starters (Cambridge English YLE) - Children aged 4-6 who are starting to learn English. Use simple isolated words, and very short, cute sentences of 2-4 words, for example: 'It is a cat.', 'I like red.'",
         sentenceRule: "Sentences MUST be extremely short (2-4 words only), using only 'I like...', 'It is a...', 'This is...' patterns. Use only the most basic, concrete, familiar words a 4-6 year old child would know. Example: 'I like cats.' or 'It is red.'"
       },
@@ -592,14 +658,14 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
         sentenceRule: "Sentences should be short (4-6 words), using simple present tense, basic adjectives, and everyday vocabulary. Example: 'The dog is very big.' or 'I eat a red apple.'"
       },
       "mover": {
-        wordCount: "8 to 10",
-        wordRange: "8-10",
+        wordCount: "10 to 12",
+        wordRange: "10-12",
         ageRange: "Movers (Cambridge English YLE) - Children aged 8-10. Use practical vocabulary, complete sentences describing actions or features, for example: 'The cat is running happily.', 'I eat healthy fruits.'",
         sentenceRule: "Sentences should be medium length (6-10 words), using present continuous, simple past, comparatives, and descriptive language. Example: 'The little cat is running happily in the garden.' or 'She eats healthy fruits every morning.'"
       },
       "flyer": {
-        wordCount: "10 to 12",
-        wordRange: "10-12",
+        wordCount: "15 to 20",
+        wordRange: "15-20",
         ageRange: "Flyers (Cambridge English YLE) - Children aged 10-12. Use rich vocabulary, various sentence structures, and fluid simple storytelling, for example: 'We played fun games in the school garden yesterday.', 'She loves learning English so she can talk to everyone.'",
         sentenceRule: "Sentences should be longer (8-15 words), using varied tenses (past, present, future), compound sentences, adverbs, and richer expressions. Example: 'We played exciting games together in the school garden yesterday afternoon.' or 'She loves learning English because she wants to travel around the world.'"
       }
@@ -636,7 +702,7 @@ CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
 6. If the file contains only isolated words but no sentences, write short, grammatically perfect, and simple sentences containing that word.
 7. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
-- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like my teacher.', sentenceTranslation MUST be 'Tôi yêu cô giáo của tôi.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 8. Each vocabulary item in the list must feature:
 - word: The English vocabulary word (strictly English, with first letters capitalized).
 - translation: The exact Vietnamese translation/meaning.
@@ -664,7 +730,7 @@ CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
 4. If the input item already contains a full sentence, use that sentence in the "sentence" field. Otherwise, write a simple, grammatically perfect English sentence containing the word.
 5. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
-- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like my teacher.', sentenceTranslation MUST be 'Tôi yêu cô giáo của tôi.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 6. Provide fully detailed fields for each word as requested:
 - word: The clean English word (with no Vietnamese meaning/translation text inside it).
 - translation: The direct Vietnamese translation.
@@ -686,7 +752,7 @@ LEVEL-APPROPRIATE VOCABULARY & GRAMMAR RULES:
 
 TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
-- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like my teacher.', sentenceTranslation MUST be 'Tôi yêu cô giáo của tôi.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 
 For each word, fill:
 - word: The English word with first letter capitalized. Word complexity must match the level.
@@ -704,14 +770,13 @@ REMINDER: Output MUST contain ${currentLevelConfig.wordCount} vocabulary items. 
     console.log(`[Gemini Request] Generating lesson for level: ${level} with topic: ${topic || '(none)'} (Has File: ${!!filePart}) (Has RawContent: ${!!rawContent}${rawContent ? `, inputWords: ${rawContent.split(/[,;\n]+/).filter((s: string) => s.trim()).length}` : ''})`);
 
     let response = null;
-    let attempts = 3;
+    const modelsToTry = ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+    let attempts = modelsToTry.length;
     let lastError = null;
 
     for (let i = 0; i < attempts; i++) {
        try {
-        // Try different model variants in case of high demand / 503 error on gemini-3.5-flash
-        const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
-        const modelName = modelsToTry[i] || "gemini-3.5-flash";
+        const modelName = modelsToTry[i] || "gemini-2.5-pro";
         console.log(`[Gemini Attempt ${i + 1}] Requesting with model: ${modelName}`);
 
         const contentsPayload = filePart
@@ -727,7 +792,7 @@ Your English sentences MUST be 100% grammatically correct, natural, simple, and 
 Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields.
 
 CRITICAL RULES:
-1. PURE VIETNAMESE TRANSLATION (KHÔNG DỊCH TRỘN TIẾNG ANH): The 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT mix English words, explanations, or definitions into these translation fields. NEVER write the English word inside the Vietnamese translation fields (e.g. never write 'Teacher' as translation for 'Teacher', it must be 'Giáo viên'; and never write 'Tớ thích teacher.' as translation for 'I like teacher.', it must be 'Tớ thích cô giáo.').
+1. PURE VIETNAMESE TRANSLATION (KHÔNG DỊCH TRỘN TIẾNG ANH): The 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT mix English words, explanations, or definitions into these translation fields. NEVER write the English word inside the Vietnamese translation fields (e.g. never write 'Teacher' as translation for 'Teacher', it must be 'Giáo viên'; and never write 'Tớ thích teacher.' as translation for 'I like teacher.', it must be 'Tôi yêu cô giáo của tôi.').
 2. PRESERVE ORIGINAL CONTENT (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO): If the user provides explicit English words, text, or uploads a document/image, you must preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated words, do not create new custom sentences if the input already contains sentences. Do not be creative.
 3. ABSOLUTE RULE ON QUANTITY: When the user provides a list of N words, you MUST output EXACTLY N vocabulary items. Never output fewer items than the user provided. Count the input items and ensure your output array has the same count. Truncating or reducing the user's word list is STRICTLY FORBIDDEN.`,
             responseMimeType: "application/json",
@@ -825,12 +890,14 @@ CRITICAL RULES:
               const isSentence = item.english.trim().split(/\s+/).length > 1;
               const translation = item.vietnamese || getFallbackTranslation(item.english);
               
+              const dictEntry = getOrGenerateEntry(capitalizedWord);
+              const fallbackPhonetic = `/${capitalizedWord.toLowerCase().replace(/[^a-z\s]/g, "")}/`;
               const newWordItem = {
                 word: capitalizedWord,
                 translation: translation,
-                phonetic: `/${capitalizedWord.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
-                sentence: isSentence ? capitalizedWord : `I like ${capitalizedWord.toLowerCase()}.`,
-                sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
+                phonetic: dictEntry ? dictEntry.phonetic : fallbackPhonetic,
+                sentence: isSentence ? capitalizedWord : (dictEntry && dictEntry.sentence ? dictEntry.sentence : `I like my ${capitalizedWord.toLowerCase()}.`),
+                sentenceTranslation: isSentence ? translation : (dictEntry && dictEntry.sentenceTranslation ? dictEntry.sentenceTranslation : `Tôi yêu ${translation.toLowerCase()} của tôi.`),
                 illustration: getFallbackIllustration(item.english),
               };
               
@@ -870,12 +937,14 @@ CRITICAL RULES:
         const isSentence = item.english.trim().split(/\s+/).length > 1;
         const translation = item.vietnamese || getFallbackTranslation(item.english);
         
+        const dictEntry = getOrGenerateEntry(capitalizedWord);
+        const fallbackPhonetic = `/${item.english.toLowerCase().replace(/[^a-z\s]/g, "")}/`;
         const rawItem = {
           word: capitalizedWord,
           translation: translation,
-          phonetic: `/${item.english.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
-          sentence: isSentence ? capitalizedWord : `I like ${item.english.toLowerCase()}.`,
-          sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
+          phonetic: dictEntry ? dictEntry.phonetic : fallbackPhonetic,
+          sentence: isSentence ? capitalizedWord : (dictEntry && dictEntry.sentence ? dictEntry.sentence : `I like my ${item.english.toLowerCase()}.`),
+          sentenceTranslation: isSentence ? translation : (dictEntry && dictEntry.sentenceTranslation ? dictEntry.sentenceTranslation : `Tôi yêu ${translation.toLowerCase()} của tôi.`),
           illustration: getFallbackIllustration(item.english),
         };
         
@@ -1054,222 +1123,90 @@ function getFallbackWords(topic: string, level: string) {
   const normalized = topic.toLowerCase();
   
   const sampleAnimals = [
-    {
-      id: "fa1",
-      word: "Cat",
-      translation: "Con mèo",
-      phonetic: "/kæt/",
-      sentence: "The little cat says meow meow.",
-      sentenceTranslation: "Chú mèo nhỏ kêu meow meow.",
-      illustration: "🐱",
-      category: "Animals",
-    },
-    {
-      id: "fa2",
-      word: "Dog",
-      translation: "Con chó",
-      phonetic: "/dɒɡ/",
-      sentence: "The happy dog wags its tail.",
-      sentenceTranslation: "Chú chó vui vẻ vẫy đuôi.",
-      illustration: "🐶",
-      category: "Animals",
-    },
-    {
-      id: "fa3",
-      word: "Monkey",
-      translation: "Con khỉ",
-      phonetic: "/ˈmʌŋ.ki/",
-      sentence: "The monkey loves eating sweet bananas.",
-      sentenceTranslation: "Chú khỉ thích ăn những quả chuối ngọt lịm.",
-      illustration: "🐵",
-      category: "Animals",
-    },
-    {
-      id: "fa4",
-      word: "Rabbit",
-      translation: "Con thỏ",
-      phonetic: "/ˈræb.ɪt/",
-      sentence: "The rabbit hops fast to get a carrot.",
-      sentenceTranslation: "Chú thỏ nhảy nhanh để lấy củ cà rốt.",
-      illustration: "🐰",
-      category: "Animals",
-    },
-    {
-      id: "fa5",
-      word: "Lion",
-      translation: "Sư tử",
-      phonetic: "/ˈlaɪ.ən/",
-      sentence: "The lion is the majestic king of the forest.",
-      sentenceTranslation: "Sư tử là vị vua oai nghiêm của khu rừng.",
-      illustration: "🦁",
-      category: "Animals",
-    },
-    {
-      id: "fa6",
-      word: "Bird",
-      translation: "Con chim",
-      phonetic: "/bɜːd/",
-      sentence: "The blue bird sings a sweet song.",
-      sentenceTranslation: "Chú chim xanh hót một bài hát ngọt ngào.",
-      illustration: "🐦",
-      category: "Animals",
-    },
-    {
-      id: "fa7",
-      word: "Elephant",
-      translation: "Con voi",
-      phonetic: "/ˈel.ɪ.fənt/",
-      sentence: "The big elephant has a very long nose.",
-      sentenceTranslation: "Chú voi to lớn có một chiếc mũi rất dài.",
-      illustration: "🐘",
-      category: "Animals",
-    },
-    {
-      id: "fa8",
-      word: "Frog",
-      translation: "Con ếch",
-      phonetic: "/frɒɡ/",
-      sentence: "The green frog jumps into the cool pond.",
-      sentenceTranslation: "Chú ếch xanh nhảy vào ao nước mát lạnh.",
-      illustration: "🐸",
-      category: "Animals",
-    }
+    { id: "fa1", word: "Cat", translation: "Con mèo", phonetic: "/kæt/", sentence: "The little cat is sleeping.", sentenceTranslation: "Chú mèo nhỏ đang ngủ.", illustration: "🐱", category: "Animals" },
+    { id: "fa2", word: "Dog", translation: "Con chó", phonetic: "/dɒɡ/", sentence: "The happy dog wags its tail.", sentenceTranslation: "Chú chó vui vẻ vẫy đuôi.", illustration: "🐶", category: "Animals" },
+    { id: "fa3", word: "Monkey", translation: "Con khỉ", phonetic: "/ˈmʌŋ.ki/", sentence: "The monkey eats sweet bananas.", sentenceTranslation: "Chú khỉ thích ăn những quả chuối ngọt lịm.", illustration: "🐵", category: "Animals" },
+    { id: "fa4", word: "Rabbit", translation: "Con thỏ", phonetic: "/ˈræb.ɪt/", sentence: "The white rabbit hops fast.", sentenceTranslation: "Chú thỏ trắng nhảy thật nhanh.", illustration: "🐰", category: "Animals" },
+    { id: "fa5", word: "Lion", translation: "Sư tử", phonetic: "/ˈlaɪ.ən/", sentence: "The lion rules the savanna jungle.", sentenceTranslation: "Chú sư tử thống trị vùng thảo nguyên cỏ.", illustration: "🦁", category: "Animals" },
+    { id: "fa6", word: "Bird", translation: "Con chim", phonetic: "/bɜːd/", sentence: "The colorful bird sings softly.", sentenceTranslation: "Chú chim nhiều màu sắc hót líu lo ngọt ngào.", illustration: "🐦", category: "Animals" },
+    { id: "fa7", word: "Elephant", translation: "Con voi", phonetic: "/ˈel.ɪ.fənt/", sentence: "The big elephant has a very long nose.", sentenceTranslation: "Chú voi to lớn có một chiếc mũi rất dài.", illustration: "🐘", category: "Animals" },
+    { id: "fa8", word: "Frog", translation: "Con ếch", phonetic: "/frɒɡ/", sentence: "The green frog jumps high.", sentenceTranslation: "Chú ếch xanh nhảy thật cao.", illustration: "🐸", category: "Animals" },
+    { id: "fa9", word: "Giraffe", translation: "Hươu cao cổ", phonetic: "/dʒəˈrɑːf/", sentence: "The tall giraffe eats green leaves.", sentenceTranslation: "Chú hươu cao cổ cao lớn ăn những chiếc lá xanh.", illustration: "🦒", category: "Animals" },
+    { id: "fa10", word: "Tiger", translation: "Con hổ", phonetic: "/ˈtaɪɡə(r)/", sentence: "The strong tiger runs very fast.", sentenceTranslation: "Chú hổ mạnh mẽ chạy rất nhanh.", illustration: "🐯", category: "Animals" },
+    { id: "fa11", word: "Pig", translation: "Con heo", phonetic: "/pɪɡ/", sentence: "The cute pink pig plays in the mud.", sentenceTranslation: "Chú heo hồng đáng yêu chơi trong bùn.", illustration: "🐷", category: "Animals" },
+    { id: "fa12", word: "Sheep", translation: "Con cừu", phonetic: "/ʃiːp/", sentence: "The white sheep eats grass in the field.", sentenceTranslation: "Chú cừu trắng ăn cỏ trên cánh đồng.", illustration: "🐑", category: "Animals" },
+    { id: "fa13", word: "Duck", translation: "Con vịt", phonetic: "/dʌk/", sentence: "The little duck swims in the pond.", sentenceTranslation: "Chú vịt nhỏ bơi trong ao.", illustration: "🦆", category: "Animals" },
+    { id: "fa14", word: "Chicken", translation: "Con gà", phonetic: "/ˈtʃɪkɪn/", sentence: "The chicken walks around the farm.", sentenceTranslation: "Con gà đi quanh trang trại.", illustration: "🐔", category: "Animals" },
+    { id: "fa15", word: "Cow", translation: "Con bò", phonetic: "/kaʊ/", sentence: "The friendly cow gives fresh milk.", sentenceTranslation: "Chú bò thân thiện cho sữa tươi.", illustration: "🐮", category: "Animals" },
+    { id: "fa16", word: "Bear", translation: "Con gấu", phonetic: "/beə(r)/", sentence: "The big brown bear loves sweet honey.", sentenceTranslation: "Chú gấu nâu lớn thích mật ong ngọt ngào.", illustration: "🐻", category: "Animals" },
+    { id: "fa17", word: "Mouse", translation: "Con chuột", phonetic: "/maʊs/", sentence: "The tiny mouse eats cheese.", sentenceTranslation: "Chú chuột nhỏ bé ăn phô mai.", illustration: "🐭", category: "Animals" },
+    { id: "fa18", word: "Horse", translation: "Con ngựa", phonetic: "/hɔːs/", sentence: "The fast horse runs on the grass.", sentenceTranslation: "Chú ngựa chạy nhanh trên cỏ.", illustration: "🐴", category: "Animals" },
+    { id: "fa19", word: "Fish", translation: "Con cá", phonetic: "/fɪʃ/", sentence: "The little fish swims in the water.", sentenceTranslation: "Chú cá nhỏ bơi dưới nước.", illustration: "🐟", category: "Animals" },
+    { id: "fa20", word: "Turtle", translation: "Con rùa", phonetic: "/ˈtɜːtl/", sentence: "The slow turtle walks slowly.", sentenceTranslation: "Chú rùa chậm chạp bước đi thong thả.", illustration: "🐢", category: "Animals" }
   ];
 
   const sampleFruits = [
-    {
-      id: "ff1",
-      word: "Apple",
-      translation: "Quả táo",
-      phonetic: "/ˈæp.əl/",
-      sentence: "I love eating crunchy red apples.",
-      sentenceTranslation: "Tớ thích ăn những quả táo đỏ giòn rụm.",
-      illustration: "🍎",
-      category: "Fruits",
-    },
-    {
-      id: "ff2",
-      word: "Banana",
-      translation: "Quả chuối",
-      phonetic: "/bəˈnɑː.nə/",
-      sentence: "Bananas are sweet and yellow.",
-      sentenceTranslation: "Những quả chuối vừa ngọt vừa có màu vàng.",
-      illustration: "🍌",
-      category: "Fruits",
-    },
-    {
-      id: "ff3",
-      word: "Watermelon",
-      translation: "Dưa hấu",
-      phonetic: "/ˈwɔː.təˌmel.ən/",
-      sentence: "Watermelon keeps us cool on hot days.",
-      sentenceTranslation: "Dưa hấu giúp chúng ta mát mẻ trong những ngày nóng nực.",
-      illustration: "🍉",
-      category: "Fruits",
-    },
-    {
-      id: "ff4",
-      word: "Orange",
-      translation: "Quả cam",
-      phonetic: "/ˈɒr.ɪndʒ/",
-      sentence: "Fresh orange juice is full of vitamins.",
-      sentenceTranslation: "Nước cam tươi chứa đầy các loại vitamin.",
-      illustration: "🍊",
-      category: "Fruits",
-    },
-    {
-      id: "ff5",
-      word: "Strawberry",
-      translation: "Quả dâu tây",
-      phonetic: "/ˈstrɔː.bər.i/",
-      sentence: "The cute strawberries are red and sweet.",
-      sentenceTranslation: "Những quả dâu tây xinh xắn vừa đỏ vừa ngọt.",
-      illustration: "🍓",
-      category: "Fruits",
-    },
-    {
-      id: "ff6",
-      word: "Grapes",
-      translation: "Quả nho",
-      phonetic: "/ɡreɪps/",
-      sentence: "Lulu has a bunch of delicious purple grapes.",
-      sentenceTranslation: "Lulu có một chùm nho tím rất ngon.",
-      illustration: "🍇",
-      category: "Fruits",
-    }
+    { id: "ff1", word: "Apple", translation: "Quả táo", phonetic: "/ˈæp.əl/", sentence: "I love eating crunchy red apples.", sentenceTranslation: "Tớ cực kỳ thích ăn những quả táo đỏ giòn rụm.", illustration: "🍎", category: "Fruits" },
+    { id: "ff2", word: "Banana", translation: "Quả chuối", phonetic: "/bəˈnɑː.nə/", sentence: "Bananas are sweet and yellow.", sentenceTranslation: "Những quả chuối vừa ngọt vừa có màu vàng óng.", illustration: "🍌", category: "Fruits" },
+    { id: "ff3", word: "Watermelon", translation: "Dưa hấu", phonetic: "/ˈwɔː.təˌmel.ən/", sentence: "Watermelon keeps us cool on hot days.", sentenceTranslation: "Dưa hấu giúp chúng ta mát mẻ trong những ngày nóng nực.", illustration: "🍉", category: "Fruits" },
+    { id: "ff4", word: "Orange", translation: "Quả cam", phonetic: "/ˈɒr.ɪndʒ/", sentence: "Fresh orange juice is full of vitamins.", sentenceTranslation: "Nước cam tươi có chứa rất nhiều vitamin bổ dưỡng.", illustration: "🍊", category: "Fruits" },
+    { id: "ff5", word: "Strawberry", translation: "Quả dâu tây", phonetic: "/ˈstrɔː.bər.i/", sentence: "The cute strawberries are red and sweet.", sentenceTranslation: "Những quả dâu tây xinh xắn vừa đỏ vừa ngọt.", illustration: "🍓", category: "Fruits" },
+    { id: "ff6", word: "Grapes", translation: "Quả nho", phonetic: "/greɪps/", sentence: "Lulu has a bunch of delicious grapes.", sentenceTranslation: "Lulu có một chùm nho rất ngon ngọt.", illustration: "🍇", category: "Fruits" },
+    { id: "ff7", word: "Pineapple", translation: "Quả dứa", phonetic: "/ˈpaɪn.æp.l/", sentence: "The yellow pineapple is sweet and sour.", sentenceTranslation: "Quả dứa màu vàng có vị chua chua ngọt ngọt.", illustration: "🍍", category: "Fruits" },
+    { id: "ff8", word: "Mango", translation: "Quả xoài", phonetic: "/ˈmæŋ.ɡəʊ/", sentence: "I love eating sweet ripe mangoes.", sentenceTranslation: "Tớ thích ăn những quả xoài chín ngọt lịm.", illustration: "🥭", category: "Fruits" },
+    { id: "ff9", word: "Peach", translation: "Quả đào", phonetic: "/piːtʃ/", sentence: "The pink peach is soft and juicy.", sentenceTranslation: "Quả đào hồng hào mềm mại và mọng nước.", illustration: "🍑", category: "Fruits" },
+    { id: "ff10", word: "Cherry", translation: "Quả anh đào", phonetic: "/ˈtʃer.i/", sentence: "The small red cherries are sweet.", sentenceTranslation: "Những quả anh đào nhỏ màu đỏ thật ngọt ngào.", illustration: "🍒", category: "Fruits" },
+    { id: "ff11", word: "Pear", translation: "Quả lê", phonetic: "/peə(r)/", sentence: "The green pear is sweet and crunchy.", sentenceTranslation: "Quả lê xanh ngọt và giòn rụm.", illustration: "🍐", category: "Fruits" },
+    { id: "ff12", word: "Lemon", translation: "Quả chanh", phonetic: "/ˈlem.ən/", sentence: "The yellow lemon is very sour.", sentenceTranslation: "Quả chanh màu vàng thì rất chua.", illustration: "🍋", category: "Fruits" },
+    { id: "ff13", word: "Coconut", translation: "Quả dừa", phonetic: "/ˈkəʊ.kə.nʌt/", sentence: "Coconut water is very sweet and fresh.", sentenceTranslation: "Nước dừa rất ngọt và tươi mát.", illustration: "🥥", category: "Fruits" },
+    { id: "ff14", word: "Melon", translation: "Quả dưa lưới", phonetic: "/ˈmel.ən/", sentence: "The melon is sweet and cool.", sentenceTranslation: "Quả dưa lưới ngọt ngào và mát lành.", illustration: "🍈", category: "Fruits" },
+    { id: "ff15", word: "Kiwi", translation: "Quả kiwi", phonetic: "/ˈkiː.wiː/", sentence: "The green kiwi is delicious.", sentenceTranslation: "Quả kiwi màu xanh ăn rất ngon.", illustration: "🥝", category: "Fruits" },
+    { id: "ff16", word: "Avocado", translation: "Quả bơ", phonetic: "/ˌæv.əˈkɑː.dəʊ/", sentence: "Avocado is soft and very healthy.", sentenceTranslation: "Quả bơ mềm mại và rất tốt cho sức khỏe.", illustration: "🥑", category: "Fruits" },
+    { id: "ff17", word: "Tomato", translation: "Quả cà chua", phonetic: "/təˈmɑː.təʊ/", sentence: "The tomato is red and round.", sentenceTranslation: "Quả cà chua màu đỏ và tròn xòe.", illustration: "🍅", category: "Fruits" },
+    { id: "ff18", word: "Plum", translation: "Quả mận", phonetic: "/plʌm/", sentence: "The sweet plum has a dark color.", sentenceTranslation: "Quả mận ngọt có màu đậm đà.", illustration: "🍑", category: "Fruits" },
+    { id: "ff19", word: "Blueberry", translation: "Quả việt quất", phonetic: "/ˈbluː.bər.i/", sentence: "Blueberries are small and blue.", sentenceTranslation: "Những quả việt quất nhỏ nhắn và có màu xanh dương.", illustration: "🫐", category: "Fruits" },
+    { id: "ff20", word: "Papaya", translation: "Quả đu đủ", phonetic: "/pəˈpaɪ.ə/", sentence: "The orange papaya is soft and sweet.", sentenceTranslation: "Quả đu đủ màu cam mềm mại và ngọt ngào.", illustration: "🍈", category: "Fruits" }
   ];
 
   const sampleSchool = [
-    {
-      id: "fs1",
-      word: "Book",
-      translation: "Quyển sách",
-      phonetic: "/bʊk/",
-      sentence: "This book has funny animal stories.",
-      sentenceTranslation: "Quyển sách này có những câu chuyện động vật vui nhộn.",
-      illustration: "📕",
-      category: "School Objects",
-    },
-    {
-      id: "fs2",
-      word: "Pencil",
-      translation: "Bút chì",
-      phonetic: "/ˈpen.səl/",
-      sentence: "I draw a smiling flower with my pencil.",
-      sentenceTranslation: "Tớ vẽ một bông hoa mỉm cười bằng bút chì của tớ.",
-      illustration: "✏️",
-      category: "School Objects",
-    },
-    {
-      id: "fs3",
-      word: "Ruler",
-      translation: "Thước kẻ",
-      phonetic: "/ˈruː.lər/",
-      sentence: "Use your ruler to make straight lines.",
-      sentenceTranslation: "Hãy dùng thước kẻ của cậu để vẽ những đường thẳng nhé.",
-      illustration: "📏",
-      category: "School Objects",
-    },
-    {
-      id: "fs4",
-      word: "Backpack",
-      translation: "Balo",
-      phonetic: "/ˈbæk.pæk/",
-      sentence: "My school backpack is heavy but colorful.",
-      sentenceTranslation: "Balo đi học của tớ tuy nặng nhưng đầy màu sắc.",
-      illustration: "🎒",
-      category: "School Objects",
-    },
-    {
-      id: "fs5",
-      word: "Eraser",
-      translation: "Cục tẩy",
-      phonetic: "/ɪˈreɪ.sər/",
-      sentence: "I erase the tiny mistake quickly.",
-      sentenceTranslation: "Tớ tẩy vết sai nhỏ một cách nhanh chóng.",
-      illustration: "🧼",
-      category: "School Objects",
-    },
-    {
-      id: "fs6",
-      word: "School",
-      translation: "Trường học",
-      phonetic: "/skuːl/",
-      sentence: "School is a happy place to meet friends.",
-      sentenceTranslation: "Trường học là một nơi vui vẻ để gặp gỡ bạn bè.",
-      illustration: "🏫",
-      category: "School Objects",
-    }
+    { id: "fs1", word: "Book", translation: "Quyển sách", phonetic: "/bʊk/", sentence: "This book has funny animal stories.", sentenceTranslation: "Quyển sách này có những câu chuyện động vật vui nhộn.", illustration: "📕", category: "School Objects" },
+    { id: "fs2", word: "Pencil", translation: "Bút chì", phonetic: "/ˈpen.səl/", sentence: "I draw a smiling flower with my pencil.", sentenceTranslation: "Tớ vẽ một bông hoa mỉm cười bằng bút chì của tớ.", illustration: "✏️", category: "School Objects" },
+    { id: "fs3", word: "Ruler", translation: "Thước kẻ", phonetic: "/ˈruː.lər/", sentence: "Use your ruler to make straight lines.", sentenceTranslation: "Hãy dùng thước kẻ của cậu để vẽ những đường thẳng nhé.", illustration: "📏", category: "School Objects" },
+    { id: "fs4", word: "Backpack", translation: "Balo", phonetic: "/ˈbæk.pæk/", sentence: "My school backpack is heavy but colorful.", sentenceTranslation: "Balo đi học của tớ tuy nặng nhưng đầy màu sắc.", illustration: "🎒", category: "School Objects" },
+    { id: "fs5", word: "Eraser", translation: "Cục tẩy", phonetic: "/let's use Eraser/", sentence: "I erase the tiny mistake quickly.", sentenceTranslation: "Tớ tẩy vết sai nhỏ một cách nhanh chóng.", illustration: "🧼", category: "School Objects" },
+    { id: "fs6", word: "School", translation: "Trường học", phonetic: "/skuːl/", sentence: "School is a happy place to meet friends.", sentenceTranslation: "Trường học là một nơi vui vẻ để gặp gỡ bạn bè.", illustration: "🏫", category: "School Objects" },
+    { id: "fs7", word: "Pen", translation: "Bút mực", phonetic: "/pen/", sentence: "I write my homework with a blue pen.", sentenceTranslation: "Tôi viết bài tập về nhà bằng bút mực xanh.", illustration: "🖊️", category: "School Objects" },
+    { id: "fs8", word: "Desk", translation: "Bàn học", phonetic: "/desk/", sentence: "I sit at my clean desk to read.", sentenceTranslation: "Tôi ngồi đọc sách tại chiếc bàn học sạch sẽ.", illustration: "📥", category: "School Objects" },
+    { id: "fs9", word: "Chair", translation: "Ghế", phonetic: "/tʃeə(r)/", sentence: "I sit on a comfortable wooden chair.", sentenceTranslation: "Tôi ngồi trên chiếc ghế gỗ thoải mái.", illustration: "🪑", category: "School Objects" },
+    { id: "fs10", word: "Notebook", translation: "Vở ghi", phonetic: "/ˈnəʊt.bʊk/", sentence: "I write new English words in my notebook.", sentenceTranslation: "Tôi viết từ mới tiếng Anh vào vở ghi của mình.", illustration: "📓", category: "School Objects" },
+    { id: "fs11", word: "Marker", translation: "Bút viết bảng", phonetic: "/ˈmɑː.kər/", sentence: "The teacher writes with a red marker.", sentenceTranslation: "Cô giáo viết bài bằng bút lông màu đỏ.", illustration: "🖍️", category: "School Objects" },
+    { id: "fs12", word: "Sharpener", translation: "Gọt bút chì", phonetic: "/ˈʃɑːp.nər/", sentence: "I sharpen my pencil with a sharpener.", sentenceTranslation: "Tôi chuốt nhọn bút chì bằng chiếc gọt bút chì.", illustration: "✏️", category: "School Objects" },
+    { id: "fs13", word: "Scissors", translation: "Cây kéo", phonetic: "/ˈsɪz.əz/", sentence: "I cut colorful paper with my scissors.", sentenceTranslation: "Tôi cắt giấy màu bằng cây kéo của tôi.", illustration: "✂️", category: "School Objects" },
+    { id: "fs14", word: "Glue", translation: "Keo dán", phonetic: "/ɡluː/", sentence: "I stick the pictures using craft glue.", sentenceTranslation: "Tôi dán tranh bằng keo dán thủ công.", illustration: "🧴", category: "School Objects" },
+    { id: "fs15", word: "Board", translation: "Bảng học", phonetic: "/bɔːd/", sentence: "Look at the blackboard for our lesson.", sentenceTranslation: "Hãy nhìn lên bảng đen để theo dõi bài học.", illustration: "📋", category: "School Objects" },
+    { id: "fs16", word: "Crayon", translation: "Bút sáp màu", phonetic: "/ˈcreɪ.ɒn/", sentence: "I draw a yellow sun with my crayon.", sentenceTranslation: "Tôi vẽ một mặt trời màu vàng bằng bút sáp màu của tôi.", illustration: "🖍️", category: "School Objects" },
+    { id: "fs17", word: "Computer", translation: "Máy tính", phonetic: "/kəmˈpjuː.tər/", sentence: "We play educational games on the computer.", sentenceTranslation: "Chúng tôi chơi trò chơi học tập trên máy tính.", illustration: "💻", category: "School Objects" },
+    { id: "fs18", word: "Paper", translation: "Tờ giấy", phonetic: "/ˈpeɪ.pər/", sentence: "I write my name on the white paper.", sentenceTranslation: "Tôi viết tên mình lên tờ giấy trắng.", illustration: "📄", category: "School Objects" },
+    { id: "fs19", word: "Clock", translation: "Đồng hồ", phonetic: "/klɒk/", sentence: "The school clock tells us it is lunchtime.", sentenceTranslation: "Đồng hồ trường học báo hiệu đã đến giờ ăn trưa.", illustration: "⏰", category: "School Objects" },
+    { id: "fs20", word: "Map", translation: "Bản đồ", phonetic: "/mæp/", sentence: "We look at the world map on the wall.", sentenceTranslation: "Chúng tôi xem bản đồ thế giới treo trên tường.", illustration: "🗺️", category: "School Objects" }
   ];
 
+  const countMap: Record<string, number> = {
+    "pre-starter": 4,
+    "starter": 8,
+    "mover": 12,
+    "flyer": 20
+  };
+  const count = countMap[level.toLowerCase()] || 8;
+
+  let selectedList = sampleAnimals;
   if (normalized.includes("trái") || normalized.includes("quả") || normalized.includes("fruit") || normalized.includes("ăn")) {
-    return sampleFruits;
+    selectedList = sampleFruits;
   } else if (normalized.includes("học") || normalized.includes("trường") || normalized.includes("school") || normalized.includes("đồ dùng")) {
-    return sampleSchool;
-  } else {
-    // Default to lovable animals
-    return sampleAnimals;
+    selectedList = sampleSchool;
   }
+  
+  return selectedList.slice(0, count);
 }
 
 // Development and production asset serving configurations
