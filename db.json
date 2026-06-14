@@ -1,0 +1,196 @@
+{
+  "classroomsList": [
+    {
+      "id": "class-1",
+      "name": "Lớp Lá mầm non 🌟",
+      "students": [
+        {
+          "name": "Bé Minh Anh",
+          "phone": "0912345678"
+        },
+        {
+          "name": "Bé Hương Giang",
+          "phone": "0987654321"
+        },
+        {
+          "name": "Bé Bảo Nam",
+          "phone": "0345678901"
+        },
+        {
+          "name": "Bé Khánh Vy",
+          "phone": "0356789012"
+        }
+      ],
+      "createdAt": 1780971672414
+    },
+    {
+      "id": "class-2",
+      "name": "Lớp 3A Tiểu học 🦁",
+      "students": [
+        {
+          "name": "Nguyễn Hoàng Lâm",
+          "phone": "0911223344"
+        },
+        {
+          "name": "Trần Thúy Vân",
+          "phone": "0922334455"
+        },
+        {
+          "name": "Lê Gia Bảo",
+          "phone": "0933445566"
+        },
+        {
+          "name": "Vũ Tuấn Tú",
+          "phone": "0944556677"
+        }
+      ],
+      "createdAt": 1781230872414
+    }
+  ],
+  "lessonsList": [
+    {
+      "id": "lesson-1",
+      "title": "🤖 Từ Vựng Động Vật Đáng Yêu",
+      "level": "preschool",
+      "createdAt": 1781317272414,
+      "words": [
+        {
+          "id": "m1",
+          "word": "Cat",
+          "translation": "Con mèo",
+          "phonetic": "/kæt/",
+          "sentence": "The little cat is sleeping.",
+          "sentenceTranslation": "Chú mèo nhỏ đang ngủ.",
+          "illustration": "🐱",
+          "category": "Animals"
+        },
+        {
+          "id": "m2",
+          "word": "Dog",
+          "translation": "Con chó",
+          "phonetic": "/dɒɡ/",
+          "sentence": "The happy dog wags its tail.",
+          "sentenceTranslation": "Chú chó vui vẻ vẫy đuôi.",
+          "illustration": "🐶",
+          "category": "Animals"
+        },
+        {
+          "id": "m3",
+          "word": "Bird",
+          "translation": "Con chim",
+          "phonetic": "/bɜːd/",
+          "sentence": "The colorful bird sings softly.",
+          "sentenceTranslation": "Chú chim nhiều màu sắc hót líu lo ngọt ngào.",
+          "illustration": "🐦",
+          "category": "Animals"
+        },
+        {
+          "id": "m4",
+          "word": "Monkey",
+          "translation": "Con khỉ",
+          "phonetic": "/ˈmʌŋ.ki/",
+          "sentence": "The banana is yummy for the monkey.",
+          "sentenceTranslation": "Trái chuối ngọt ngào ngon miệng cho chú khỉ.",
+          "illustration": "🐵",
+          "category": "Animals"
+        },
+        {
+          "id": "m5",
+          "word": "Rabbit",
+          "translation": "Con thỏ",
+          "phonetic": "/ˈræb.ɪt/",
+          "sentence": "The fast white rabbit hops to me.",
+          "sentenceTranslation": "Chú thỏ trắng chạy nhảy thật nhanh về phía tớ.",
+          "illustration": "🐰",
+          "category": "Animals"
+        },
+        {
+          "id": "m6",
+          "word": "Lion",
+          "translation": "Sư tử mẫu",
+          "phonetic": "/ˈlaɪ.ən/",
+          "sentence": "The big lion rules the savanna jungle.",
+          "sentenceTranslation": "Chú sư tử to lớn thống trị vùng thảo nguyên cỏ.",
+          "illustration": "🦁",
+          "category": "Animals"
+        }
+      ]
+    },
+    {
+      "id": "lesson-2",
+      "title": "🍎 Trái Cây Ngọt Lịm Cho Bé Thơ",
+      "level": "preschool",
+      "createdAt": 1781230872414,
+      "words": [
+        {
+          "id": "ff1",
+          "word": "Apple",
+          "translation": "Quả táo",
+          "phonetic": "/ˈæp.əl/",
+          "sentence": "I love eating crunchy red apples.",
+          "sentenceTranslation": "Tớ cực kỳ thích ăn những quả táo đỏ giòn rụm.",
+          "illustration": "🍎",
+          "category": "Fruits"
+        },
+        {
+          "id": "ff2",
+          "word": "Banana",
+          "translation": "Quả chuối",
+          "phonetic": "/bəˈnɑː.nə/",
+          "sentence": "Bananas are sweet and yellow.",
+          "sentenceTranslation": "Những quả chuối vừa ngọt vừa có màu vàng óng.",
+          "illustration": "🍌",
+          "category": "Fruits"
+        },
+        {
+          "id": "ff3",
+          "word": "Orange",
+          "translation": "Quả cam",
+          "phonetic": "/ˈɒr.ɪndʒ/",
+          "sentence": "Fresh orange juice is full of vitamins.",
+          "sentenceTranslation": "Nước cam tươi có chứa rất nhiều vitamin bổ dưỡng.",
+          "illustration": "🍊",
+          "category": "Fruits"
+        }
+      ]
+    }
+  ],
+  "testAttempts": [
+    {
+      "id": "att-1",
+      "studentName": "Bé Minh Anh",
+      "classId": "class-1",
+      "className": "Lớp Lá mầm non 🌟",
+      "lessonId": "lesson-1",
+      "lessonTitle": "🤖 Từ Vựng Động Vật Đáng Yêu",
+      "score": 100,
+      "level": "preschool",
+      "timestamp": 1781389272414,
+      "teacherName": "Cô Thảo"
+    },
+    {
+      "id": "att-2",
+      "studentName": "Bé Bảo Nam",
+      "classId": "class-1",
+      "className": "Lớp Lá mầm non 🌟",
+      "lessonId": "lesson-1",
+      "lessonTitle": "🤖 Từ Vựng Động Vật Đáng Yêu",
+      "score": 80,
+      "level": "preschool",
+      "timestamp": 1781317272414,
+      "teacherName": "Cô Thảo"
+    },
+    {
+      "id": "att-3",
+      "studentName": "Nguyễn Hoàng Lâm",
+      "classId": "class-2",
+      "className": "Lớp 3A Tiểu học 🦁",
+      "lessonId": "lesson-1",
+      "lessonTitle": "🤖 Từ Vựng Động Vật Đáng Yêu",
+      "score": 90,
+      "level": "elementary",
+      "timestamp": 1781396472414,
+      "teacherName": "Thầy Hùng"
+    }
+  ]
+}

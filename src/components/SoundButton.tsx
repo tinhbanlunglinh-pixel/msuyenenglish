@@ -3,22 +3,178 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Volume2 } from "lucide-react";
 import { motion } from "motion/react";
-import { playSound } from "../utils/audioSynth";
+
+// =====================================================
+// PREMIUM NATIVE FEMALE VOICE ENGINE
+// Giọng nữ bản ngữ nhấn nhá ngữ điệu cực hay
+// =====================================================
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
-if (typeof window !== "undefined" && "speechSynthesis" in window) {
-  cachedVoices = window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => {
-    cachedVoices = window.speechSynthesis.getVoices();
-  };
+let bestFemaleVoice: SpeechSynthesisVoice | null = null;
+
+// Voice quality scoring system - higher = better
+function scoreVoice(v: SpeechSynthesisVoice): number {
+  const name = v.name.toLowerCase();
+  const lang = v.lang.toLowerCase().replace("_", "-");
+  let score = 0;
+
+  // Must be English
+  if (!lang.startsWith("en")) return -1;
+
+  // US English bonus
+  if (lang === "en-us") score += 20;
+  // UK English also excellent
+  if (lang === "en-gb") score += 15;
+  // Australian English
+  if (lang === "en-au") score += 12;
+
+  // ===== PREMIUM TIER (Google's best neural voices) =====
+  // Google Journey voices (most expressive, storytelling-like)
+  if (name.includes("journey")) score += 200;
+  // Google Studio voices (broadcast quality)
+  if (name.includes("studio")) score += 180;
+  // Google WaveNet voices (deep learning)
+  if (name.includes("wavenet")) score += 160;
+  // Google Neural2 voices
+  if (name.includes("neural2") || name.includes("neural")) score += 150;
+  // Google Polyglot voices
+  if (name.includes("polyglot")) score += 140;
+
+  // ===== HIGH-QUALITY TIER =====
+  if (name.includes("natural")) score += 130;
+  if (name.includes("premium")) score += 120;
+  if (name.includes("enhanced")) score += 110;
+  if (name.includes("online")) score += 100;
+  if (name.includes("expressive")) score += 100;
+
+  // ===== NAMED FEMALE VOICES (known high quality) =====
+  // Microsoft Edge / Windows voices
+  if (name.includes("aria")) score += 90;  // Microsoft Aria - very natural
+  if (name.includes("jenny")) score += 88; // Microsoft Jenny
+  if (name.includes("ana")) score += 85;
+  if (name.includes("sara")) score += 83;
+  if (name.includes("sonia")) score += 80; // en-GB Sonia
+
+  // Apple voices
+  if (name.includes("samantha")) score += 85;
+  if (name.includes("karen")) score += 80;  // Australian
+  if (name.includes("moira")) score += 78;  // Irish English
+
+  // Google Chrome voices  
+  if (name.includes("google us english")) score += 70;
+  if (name.includes("google uk english female")) score += 68;
+  
+  // Windows built-in
+  if (name.includes("zira")) score += 60;
+  if (name.includes("hazel")) score += 58;
+  if (name.includes("susan")) score += 55;
+
+  // Generic female markers
+  if (name.includes("female")) score += 40;
+  if (name.includes("woman")) score += 35;
+
+  // User's specifically requested voices
+  if (name.includes("autonoe")) score += 300;
+  if (name.includes("leda")) score += 300;
+
+  // Penalize male-sounding voices
+  if (name.includes("david")) score -= 50;
+  if (name.includes("mark")) score -= 50;
+  if (name.includes("james")) score -= 50;
+  if (name.includes("guy")) score -= 50;
+  if (name.includes("male") && !name.includes("female")) score -= 50;
+
+  // Bonus for non-local (usually cloud/streamed = better quality)
+  if (!v.localService) score += 30;
+
+  return score;
 }
 
+function findBestFemaleVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  if (voices.length === 0) return null;
+
+  let best: SpeechSynthesisVoice | null = null;
+  let bestScore = -1;
+
+  for (const v of voices) {
+    const s = scoreVoice(v);
+    if (s > bestScore) {
+      bestScore = s;
+      best = v;
+    }
+  }
+
+  if (best) {
+    console.log(`[TTS] Selected voice: "${best.name}" (lang: ${best.lang}, score: ${bestScore}, local: ${best.localService})`);
+  }
+  return best;
+}
+
+// Initialize voices
+function refreshVoices() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  cachedVoices = window.speechSynthesis.getVoices();
+  if (cachedVoices.length > 0) {
+    bestFemaleVoice = findBestFemaleVoice(cachedVoices);
+  }
+}
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  refreshVoices();
+  window.speechSynthesis.onvoiceschanged = refreshVoices;
+  // Some browsers need a delay
+  setTimeout(refreshVoices, 500);
+  setTimeout(refreshVoices, 2000);
+}
+
+// =====================================================
+// EXPRESSIVE SPEECH PARAMETERS
+// Tạo ngữ điệu nhấn nhá tự nhiên cho từng loại nội dung
+// =====================================================
+interface SpeechConfig {
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+
+function getExpressiveConfig(text: string, slow: boolean): SpeechConfig {
+  const wordCount = text.trim().split(/\s+/).length;
+  const isSingleWord = wordCount <= 2;
+  const isShortSentence = wordCount <= 5;
+
+  if (isSingleWord) {
+    // Single word: Speak clearly, slightly slower, with warm pitch
+    return {
+      rate: slow ? 0.6 : 0.75,
+      pitch: 1.15,   // Warm, friendly, slightly higher
+      volume: 1.0,
+    };
+  } else if (isShortSentence) {
+    // Short sentence (Pre-starters/Starters): Clear, playful, engaging
+    return {
+      rate: slow ? 0.65 : 0.8,
+      pitch: 1.12,   // Engaging, storytelling tone
+      volume: 1.0,
+    };
+  } else {
+    // Longer sentence (Movers/Flyers): Natural flow with good rhythm
+    return {
+      rate: slow ? 0.7 : 0.85,
+      pitch: 1.08,   // Natural, flowing, expressive
+      volume: 1.0,
+    };
+  }
+}
+
+// =====================================================
+// COMPONENT
+// =====================================================
 interface SoundButtonProps {
   text: string;
-  slow?: boolean; // Slower pronunciation rate for preschool
+  slow?: boolean;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -30,140 +186,142 @@ export const SoundButton: React.FC<SoundButtonProps> = ({
   size = "md",
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const speak = (e: React.MouseEvent) => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (utteranceRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const speak = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    playSound.playTing();
 
-    if ("speechSynthesis" in window) {
-      // Cancel active speech to avoid overlaps
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      
-      // Get all voices
-      const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
-      
-      const englishVoices = voices.filter(v => {
-        const lang = v.lang.toLowerCase().replace("_", "-");
-        return lang.startsWith("en");
-      });
-
-      // 0. ABSOLUTE TOP PRIORITY: Search specifically for premium natural voices requested by user (Autonoe, Leda)
-      let femaleNativeUSVoice = voices.find(v => {
-        const name = v.name.toLowerCase();
-        return name.includes("autonoe") || name.includes("leda");
-      });
-
-      // 1. Try to find extreme high quality Neural / Natural / Online / Premium female US English voice
-      if (!femaleNativeUSVoice) {
-        femaleNativeUSVoice = englishVoices.find(v => {
-          const name = v.name.toLowerCase();
-          const lang = v.lang.toLowerCase().replace("_", "-");
-          const isUS = lang === "en-us";
-          const isExpressive = name.includes("natural") || name.includes("neural") || name.includes("online") || name.includes("premium") || name.includes("journey") || name.includes("wavenet") || name.includes("expressive") || name.includes("studio");
-          const isFemale = name.includes("aria") || name.includes("samantha") || name.includes("zira") || name.includes("siri") || name.includes("female") || name.includes("google us english") || name.includes("jenny") || name.includes("sara");
-          return isUS && isExpressive && isFemale;
-        });
-      }
-
-      // 2. Try to find general high quality Neural / Natural / Online / Premium English voices (e.g. UK, Australia)
-      if (!femaleNativeUSVoice) {
-        femaleNativeUSVoice = englishVoices.find(v => {
-          const name = v.name.toLowerCase();
-          const isExpressive = name.includes("natural") || name.includes("neural") || name.includes("online") || name.includes("premium") || name.includes("journey") || name.includes("wavenet") || name.includes("expressive") || name.includes("studio");
-          const isFemale = name.includes("aria") || name.includes("samantha") || name.includes("karen") || name.includes("zira") || name.includes("siri") || name.includes("female") || name.includes("jenny") || name.includes("sara");
-          return isExpressive && isFemale;
-        });
-      }
-
-      // 3. Try to find standard high-quality female US voices (Google US English, Samantha, Zira, etc.)
-      if (!femaleNativeUSVoice) {
-        femaleNativeUSVoice = englishVoices.find(v => {
-          const name = v.name.toLowerCase();
-          const lang = v.lang.toLowerCase().replace("_", "-");
-          const isUS = lang === "en-us";
-          return isUS && (
-            name.includes("google us english") || 
-            name.includes("samantha") || 
-            name.includes("zira") || 
-            name.includes("siri") || 
-            name.includes("female") ||
-            name.includes("jenny") ||
-            name.includes("sara")
-          );
-        });
-      }
-
-      // 4. Default to any US English voice
-      if (!femaleNativeUSVoice) {
-        femaleNativeUSVoice = englishVoices.find(v => {
-          const lang = v.lang.toLowerCase().replace("_", "-");
-          return lang === "en-us";
-        });
-      }
-
-      // 5. Default to the first English voice found
-      if (!femaleNativeUSVoice) {
-        femaleNativeUSVoice = englishVoices[0];
-      }
-
-      if (femaleNativeUSVoice) {
-        utterance.voice = femaleNativeUSVoice;
-      }
-      
-      // Fine-tune rate and pitch for a natural, expressive, storytelling intonation for children
-      utterance.rate = slow ? 0.72 : 0.85; 
-      utterance.pitch = 1.12; // Friendly, engaging, expressive, and warm pitch without sounding robotic or squeaky
-
-      utterance.onstart = () => {
-        setIsPlaying(true);
-      };
-
-      utterance.onend = () => {
-        setIsPlaying(false);
-      };
-
-      utterance.onerror = () => {
-        setIsPlaying(false);
-      };
-
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert("Your browser does not support text-to-speech. Please try utilizing Google Chrome.");
+    if (!("speechSynthesis" in window)) {
+      alert("Trình duyệt chưa hỗ trợ phát âm. Hãy dùng Google Chrome nhé!");
+      return;
     }
-  };
+
+    // If already playing, stop
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Cancel any active speech
+    window.speechSynthesis.cancel();
+
+    // Chrome bug workaround: resume synthesis if paused
+    window.speechSynthesis.resume();
+
+    // Re-check voices (some browsers lazy-load)
+    if (!bestFemaleVoice) {
+      refreshVoices();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utteranceRef.current = utterance;
+
+    // Apply best voice
+    if (bestFemaleVoice) {
+      utterance.voice = bestFemaleVoice;
+    }
+
+    // Apply expressive speech parameters
+    const config = getExpressiveConfig(text, slow);
+    utterance.rate = config.rate;
+    utterance.pitch = config.pitch;
+    utterance.volume = config.volume;
+
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => {
+      setIsPlaying(false);
+      utteranceRef.current = null;
+    };
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      utteranceRef.current = null;
+    };
+
+    // Chrome bug: long utterances stop mid-speech. Workaround: periodic resume.
+    const resumeInterval = setInterval(() => {
+      if (!window.speechSynthesis.speaking) {
+        clearInterval(resumeInterval);
+        return;
+      }
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    }, 10000);
+
+    utterance.onend = () => {
+      clearInterval(resumeInterval);
+      setIsPlaying(false);
+      utteranceRef.current = null;
+    };
+    utterance.onerror = () => {
+      clearInterval(resumeInterval);
+      setIsPlaying(false);
+      utteranceRef.current = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }, [text, slow, isPlaying]);
 
   const btnSizes = {
-    sm: "p-2 text-sm",
-    md: "p-3 text-base",
-    lg: "p-4 text-xl",
+    sm: "p-1.5",
+    md: "p-3",
+    lg: "p-4",
+  };
+
+  const iconSizes = {
+    sm: "h-3.5 w-3.5",
+    md: "h-5 w-5",
+    lg: "h-6 w-6",
   };
 
   return (
     <motion.button
-      whileHover={{ scale: 1.1, rotate: [0, -2, 2, -2, 0] }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.1, rotate: [0, -3, 3, -3, 0] }}
+      whileTap={{ scale: 0.88 }}
       onClick={speak}
-      className={`relative inline-flex items-center justify-center rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-lg hover:from-yellow-500 hover:to-amber-600 focus:outline-none transition-all duration-300 ${btnSizes[size]} ${className}`}
-      title="Listen to pronunciation"
+      className={`relative inline-flex items-center justify-center rounded-full bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 text-white shadow-lg hover:shadow-xl hover:from-orange-500 hover:via-amber-600 hover:to-yellow-500 focus:outline-none transition-all duration-300 cursor-pointer ${btnSizes[size]} ${className}`}
+      title="Listen to pronunciation 🔊"
+      aria-label={`Listen to: ${text}`}
     >
       <motion.div
-        animate={isPlaying ? { scale: [1, 1.2, 1, 1.2, 1] } : {}}
-        transition={{ repeat: Infinity, duration: 0.6 }}
+        animate={isPlaying ? { 
+          scale: [1, 1.25, 1, 1.25, 1],
+          rotate: [0, -5, 5, -5, 0] 
+        } : {}}
+        transition={{ repeat: Infinity, duration: 0.7 }}
       >
-        {isPlaying ? (
-          <Volume2 className="h-5 w-5 animate-bounce" />
-        ) : (
-          <Volume2 className="h-5 w-5" />
-        )}
+        <Volume2 className={`${iconSizes[size]} ${isPlaying ? "animate-pulse" : ""}`} />
       </motion.div>
+
+      {/* Active playback indicator */}
       {isPlaying && (
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
+        <>
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          {/* Sound wave rings */}
+          <motion.span
+            className="absolute inset-0 rounded-full border-2 border-white/30"
+            animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          />
+          <motion.span
+            className="absolute inset-0 rounded-full border-2 border-white/20"
+            animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
+            transition={{ repeat: Infinity, duration: 1, delay: 0.3 }}
+          />
+        </>
       )}
     </motion.button>
   );

@@ -309,16 +309,36 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
       });
     }
 
-    const ageRange =
-      level === "pre-starter"
-        ? "Pre-Starters (Cambridge English YLE) - Children aged 4-6 who are starting to learn English. Use simple isolated words, and very short, cute sentences of 2-4 words, for example: 'It is a cat.', 'I like red.'"
-        : level === "starter"
-        ? "Starters (Cambridge English YLE) - Children aged 6-8. Use basic everyday vocabulary, and short playful sentences describing animals, things, or fruits, for example: 'The dog is big.', 'This is a red apple.'"
-        : level === "mover"
-        ? "Movers (Cambridge English YLE) - Children aged 8-10. Use practical vocabulary, complete sentences describing actions or features, for example: 'The cat is running happily.', 'I eat healthy fruits.'"
-        : level === "flyer"
-        ? "Flyers (Cambridge English YLE) - Children aged 10-12. Use rich vocabulary, various sentence structures, and fluid simple storytelling, for example: 'We played fun games in the school garden yesterday.', 'She loves learning English so she can talk to everyone.'"
-        : "Young Learners English.";
+    // Level-specific configuration for word count and sentence complexity
+    const levelConfig: Record<string, { wordCount: string; wordRange: string; ageRange: string; sentenceRule: string }> = {
+      "pre-starter": {
+        wordCount: "4 to 5",
+        wordRange: "4-5",
+        ageRange: "Pre-Starters (Cambridge English YLE) - Children aged 4-6 who are starting to learn English. Use simple isolated words, and very short, cute sentences of 2-4 words, for example: 'It is a cat.', 'I like red.'",
+        sentenceRule: "Sentences MUST be extremely short (2-4 words only), using only 'I like...', 'It is a...', 'This is...' patterns. Use only the most basic, concrete, familiar words a 4-6 year old child would know. Example: 'I like cats.' or 'It is red.'"
+      },
+      "starter": {
+        wordCount: "6 to 8",
+        wordRange: "6-8",
+        ageRange: "Starters (Cambridge English YLE) - Children aged 6-8. Use basic everyday vocabulary, and short playful sentences describing animals, things, or fruits, for example: 'The dog is big.', 'This is a red apple.'",
+        sentenceRule: "Sentences should be short (4-6 words), using simple present tense, basic adjectives, and everyday vocabulary. Example: 'The dog is very big.' or 'I eat a red apple.'"
+      },
+      "mover": {
+        wordCount: "8 to 10",
+        wordRange: "8-10",
+        ageRange: "Movers (Cambridge English YLE) - Children aged 8-10. Use practical vocabulary, complete sentences describing actions or features, for example: 'The cat is running happily.', 'I eat healthy fruits.'",
+        sentenceRule: "Sentences should be medium length (6-10 words), using present continuous, simple past, comparatives, and descriptive language. Example: 'The little cat is running happily in the garden.' or 'She eats healthy fruits every morning.'"
+      },
+      "flyer": {
+        wordCount: "10 to 12",
+        wordRange: "10-12",
+        ageRange: "Flyers (Cambridge English YLE) - Children aged 10-12. Use rich vocabulary, various sentence structures, and fluid simple storytelling, for example: 'We played fun games in the school garden yesterday.', 'She loves learning English so she can talk to everyone.'",
+        sentenceRule: "Sentences should be longer (8-15 words), using varied tenses (past, present, future), compound sentences, adverbs, and richer expressions. Example: 'We played exciting games together in the school garden yesterday afternoon.' or 'She loves learning English because she wants to travel around the world.'"
+      }
+    };
+
+    const currentLevelConfig = levelConfig[level] || levelConfig["starter"];
+    const ageRange = currentLevelConfig.ageRange;
 
     let prompt = "";
     let filePart: any = null;
@@ -360,11 +380,19 @@ CRITICAL PRESERVATION & VIETNAMESE-TRANSLATION RULES:
         prompt += `\nAdditional Focus: Prioritize and guide the selection of these vocabulary words around this topic: "${topic}".`;
       }
     } else if (rawContent) {
+      // Count the number of words/items the user provided to enforce exact output count
+      const inputItems = rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      const inputCount = inputItems.length;
       prompt = `Please optimize or create an English learning curriculum based entirely on the following raw text list inside:
 "${rawContent}".
 
+TOTAL INPUT COUNT: The user has provided exactly ${inputCount} words/items. You MUST generate EXACTLY ${inputCount} vocabulary cards in your response — one for each input word/item. Do NOT generate fewer. Do NOT skip, merge, or truncate any items. The number of objects in the "words" array MUST equal ${inputCount}.
+
+The ${inputCount} input items are:
+${inputItems.map((item: string, i: number) => `${i + 1}. "${item}"`).join('\n')}
+
 CRITICAL PRESERVATION & VIETNAMESE-TRANSLATION RULES:
-1. PRESERVE ORIGINAL CONTENT: Keep and extract ALL exact English words found in the text. Do NOT limit, truncate, or select a subset of the input; you must generate a vocabulary card and match every single input word or phrase provided.
+1. PRESERVE ORIGINAL CONTENT: Keep and extract ALL ${inputCount} exact English words found in the text. Do NOT limit, truncate, or select a subset of the input; you must generate a vocabulary card for EVERY SINGLE one of the ${inputCount} input words or phrases provided. Output array length MUST be ${inputCount}.
 2. If the text has example sentences or full phrases, you MUST keep those exact sentences inside the "sentence" field. Do not invent custom ones if the text has original sentences.
 3. If the text consists only of isolated words, draft very clean, simple, and delightful English sentences containing that word, suitable for ${level || "Starters"}.
 4. If the text has only sentences but no keywords, extract key words to use as "word", and keep the visual sentence for the "sentence" field.
@@ -377,26 +405,35 @@ CRITICAL PRESERVATION & VIETNAMESE-TRANSLATION RULES:
 - phonetic: Correct IPA phonetic representation.
 - sentence: The English example sentence.
 - sentenceTranslation: The matching Vietnamese translation of the English example sentence.
-- illustration: Exactly one cute, sparkling, kid-friendly emoji representing the word.`;
+- illustration: Exactly one cute, sparkling, kid-friendly emoji representing the word.
+
+FINAL REMINDER: Your output MUST contain exactly ${inputCount} items in the "words" array. Count them before responding.`;
     } else if (topic) {
       prompt = `Please create an engaging English vocabulary course suitable for: ${ageRange}.
 The topic is: "${topic}".
-Select about 6 to 8 highly useful, fun, and suitable English vocabulary words of this topic.
+You MUST select exactly ${currentLevelConfig.wordCount} highly useful, fun, and level-appropriate English vocabulary words for this topic. The number of words in the output array MUST be ${currentLevelConfig.wordRange} items.
+
+LEVEL-APPROPRIATE VOCABULARY RULES:
+- Word difficulty MUST match the level: ${ageRange}
+- ${currentLevelConfig.sentenceRule}
+
 IMPORTANT TRANSLATION RULE:
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations or synonyms.
 - The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'.
 For each word, fill:
-- word: The English word with first letter capitalized.
+- word: The English word with first letter capitalized. Word complexity must match the level.
 - translation: The direct Vietnamese translation (meaning) of the English word.
 - phonetic: Accurate IPA pronunciation (for example: '/dɒɡ/').
-- sentence: A short, simple, positive, action-oriented English sentence containing the word.
+- sentence: An English sentence containing the word. ${currentLevelConfig.sentenceRule}
 - sentenceTranslation: The matching Vietnamese translation of the English example sentence.
-- illustration: Exactly one glowing, colorful, delightful emoji representing the word.`;
+- illustration: Exactly one glowing, colorful, delightful emoji representing the word.
+
+REMINDER: Output MUST contain ${currentLevelConfig.wordCount} vocabulary items. Sentences MUST match the complexity level described above.`;
     } else {
       return res.status(400).json({ error: "Please enter a topic, paste text list, or upload a material file." });
     }
 
-    console.log(`[Gemini Request] Generating lesson for level: ${level} with topic: ${topic || '(none)'} (Has File: ${!!filePart})`);
+    console.log(`[Gemini Request] Generating lesson for level: ${level} with topic: ${topic || '(none)'} (Has File: ${!!filePart}) (Has RawContent: ${!!rawContent}${rawContent ? `, inputWords: ${rawContent.split(/[,;\n]+/).filter((s: string) => s.trim()).length}` : ''})`);
 
     let response = null;
     let attempts = 3;
@@ -417,7 +454,7 @@ For each word, fill:
           model: modelName,
           contents: contentsPayload,
           config: {
-            systemInstruction: `You are an expert children's English educator and pediatric speech language pathologist specializing in infant and primary school education. Create highly engaging, simple, positive, playful, and developmentally appropriate English lessons. Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields. CRITICAL REQUIREMENT FOR TRANSLATION: You must write the English words and sentences in their respective fields (word, sentence), but the 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT write English explanations or definitions in these translation fields. If the user provides explicit English words or sentences, you MUST preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated generic words. Every vocabulary item in your JSON output must feature both the core vocabulary word ('word') and the associated example sentence ('sentence').`,
+            systemInstruction: `You are an expert children's English educator and pediatric speech language pathologist specializing in infant and primary school education. Create highly engaging, simple, positive, playful, and developmentally appropriate English lessons. Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields. CRITICAL REQUIREMENT FOR TRANSLATION: You must write the English words and sentences in their respective fields (word, sentence), but the 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT write English explanations or definitions in these translation fields. If the user provides explicit English words or sentences, you MUST preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated generic words. Every vocabulary item in your JSON output must feature both the core vocabulary word ('word') and the associated example sentence ('sentence'). ABSOLUTE RULE ON QUANTITY: When the user provides a list of N words, you MUST output EXACTLY N vocabulary items. Never output fewer items than the user provided. Count the input items and ensure your output array has the same count. Truncating or reducing the user's word list is STRICTLY FORBIDDEN.`,
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -429,7 +466,7 @@ For each word, fill:
                 },
                 words: {
                   type: Type.ARRAY,
-                  description: "List of English vocabulary words. Extract and include every single item if a file or a raw text list was supplied. Try not to truncate any. For topic/prompt-based generations, provide 6 to 8 items.",
+                  description: `List of English vocabulary words. CRITICAL: If the user provided a raw text list or uploaded file, you MUST output ALL words from the input without any truncation — the output count MUST match the input count exactly. Never reduce, skip, or limit the list. For topic-based generations, provide exactly ${currentLevelConfig.wordCount} items matching the student's level.`,
                   items: {
                     type: Type.OBJECT,
                     required: ["word", "translation", "phonetic", "sentence", "sentenceTranslation", "illustration"],
@@ -492,6 +529,40 @@ For each word, fill:
           category: topic || "Uploaded List",
         }));
       }
+
+      // POST-GENERATION VALIDATION: Ensure output count matches input count for rawContent
+      if (rawContent && parsedData.words && Array.isArray(parsedData.words)) {
+        const inputItems = rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+        const inputCount = inputItems.length;
+        const outputCount = parsedData.words.length;
+        
+        if (outputCount < inputCount) {
+          console.warn(`[Gemini Validation] Output has ${outputCount} words but input had ${inputCount}. Filling missing ${inputCount - outputCount} words.`);
+          
+          // Find which input words are missing from the output
+          const existingWordsLower = new Set(parsedData.words.map((w: any) => w.word?.toLowerCase()));
+          
+          for (const inputItem of inputItems) {
+            if (!existingWordsLower.has(inputItem.toLowerCase())) {
+              // This input word is missing from output - add a basic entry
+              const capitalizedWord = inputItem.charAt(0).toUpperCase() + inputItem.slice(1).toLowerCase();
+              parsedData.words.push({
+                id: `w-${Date.now()}-fill-${parsedData.words.length}`,
+                word: capitalizedWord,
+                translation: capitalizedWord, // Will show the English word as placeholder
+                phonetic: `/${capitalizedWord.toLowerCase()}/`,
+                sentence: `I like ${capitalizedWord.toLowerCase()}.`,
+                sentenceTranslation: `Tớ thích ${capitalizedWord.toLowerCase()}.`,
+                illustration: "📝",
+                category: topic || "Uploaded List",
+              });
+            }
+          }
+          
+          console.log(`[Gemini Validation] After fill, total words: ${parsedData.words.length}`);
+        }
+      }
+
       return res.json(parsedData);
     } else {
       throw new Error("No response text from Gemini");
@@ -503,18 +574,41 @@ For each word, fill:
       ? `🎈 Từ Vựng: ${req.body.topic}`
       : `🎈 Bài Học ${req.body.level ? String(req.body.level).toUpperCase() : "STARTER"}`;
     
-    const fallbackWords = getFallbackWords(req.body.topic || "default", req.body.level || "starter");
-    const mappedWords = fallbackWords.map((w, idx) => ({
-      ...w,
-      id: `w-fallback-${Date.now()}-${idx}`,
-      category: req.body.topic || "Default Category"
-    }));
+    let mappedWords: any[];
+    
+    // If user provided rawContent, build fallback from their actual input words
+    if (req.body.rawContent) {
+      const inputItems = req.body.rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      console.log(`[Fallback] Building from ${inputItems.length} user-provided words`);
+      mappedWords = inputItems.map((item: string, idx: number) => {
+        const capitalizedWord = item.charAt(0).toUpperCase() + item.slice(1);
+        return {
+          id: `w-fallback-${Date.now()}-${idx}`,
+          word: capitalizedWord,
+          translation: capitalizedWord,
+          phonetic: `/${item.toLowerCase()}/`,
+          sentence: `I like ${item.toLowerCase()}.`,
+          sentenceTranslation: `Tớ thích ${item.toLowerCase()}.`,
+          illustration: "📝",
+          category: req.body.topic || "Uploaded List",
+        };
+      });
+    } else {
+      const fallbackWords = getFallbackWords(req.body.topic || "default", req.body.level || "starter");
+      mappedWords = fallbackWords.map((w, idx) => ({
+        ...w,
+        id: `w-fallback-${Date.now()}-${idx}`,
+        category: req.body.topic || "Default Category"
+      }));
+    }
 
     res.json({
       title: fallbackTitle,
       words: mappedWords,
       fallback: true,
-      errorMsg: "Hệ thống AI đang quá tải. Đã chuẩn bị sẵn giáo án minh họa hoạt hình tương ứng siêu đáng yêu cho Thầy Cô! 💕"
+      errorMsg: req.body.rawContent 
+        ? `✨ Đã khởi tạo ${mappedWords.length} thẻ từ vựng dự phòng từ danh sách của bạn! Bản dịch sẽ được cập nhật khi hệ thống AI hoạt động trở lại. 💕`
+        : "Hệ thống AI đang quá tải. Đã chuẩn bị sẵn giáo án minh họa hoạt hình tương ứng siêu đáng yêu cho Thầy Cô! 💕"
     });
   }
 });

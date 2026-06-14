@@ -1095,15 +1095,34 @@ export default function App() {
       console.warn(err);
       // Load standard local fallback words for immediate resilience so there's never a broken state
       const fallbackTitle = teacherTopic ? `🎈 Giáo án: ${teacherTopic}` : "🎈 Giáo án Tiếng Anh";
-      // Easy mock retrieval matching current levels:
-      const defaultSamples = teacherLevel === "preschool" ? [
-        { id: "fa1", word: "Cat", translation: "Con mèo", phonetic: "/kæt/", sentence: "The little cat says meow meow.", sentenceTranslation: "Chú mèo nhỏ kêu meow meow.", illustration: "🐱", category: "Animals" },
-        { id: "fa2", word: "Dog", translation: "Con chó", phonetic: "/dɒɡ/", sentence: "The happy dog wags its tail.", sentenceTranslation: "Chú chó vui vẻ vẫy đuôi.", illustration: "🐶", category: "Animals" },
-        { id: "fa3", word: "Monkey", translation: "Con khỉ", phonetic: "/ˈmʌŋ.ki/", sentence: "The monkey loves eating sweet bananas.", sentenceTranslation: "Chú khỉ thích ăn những quả chuối ngọt lịm.", illustration: "🐵", category: "Animals" }
-      ] : [
-        { id: "fs1", word: "Book", translation: "Quyển sách", phonetic: "/bʊk/", sentence: "This book has funny stories.", sentenceTranslation: "Quyển sách này có những câu chuyện thú vị.", illustration: "📕", category: "School" },
-        { id: "fs2", word: "Pencil", translation: "Bút chì", phonetic: "/ˈpen.səl/", sentence: "I draw a smiling flower with my pencil.", sentenceTranslation: "Tớ vẽ một bông hoa mỉm cười bằng bút chì của tớ.", illustration: "✏️", category: "School" }
-      ];
+      
+      // If user provided a word list, build fallback from their actual words
+      let defaultSamples: any[];
+      if (teacherUploadText && teacherUploadText.trim()) {
+        const inputItems = teacherUploadText.split(/[,;\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+        defaultSamples = inputItems.map((item, idx) => {
+          const capitalizedWord = item.charAt(0).toUpperCase() + item.slice(1);
+          return {
+            id: `fa-input-${idx}`,
+            word: capitalizedWord,
+            translation: capitalizedWord,
+            phonetic: `/${item.toLowerCase()}/`,
+            sentence: `I like ${item.toLowerCase()}.`,
+            sentenceTranslation: `Tớ thích ${item.toLowerCase()}.`,
+            illustration: "📝",
+            category: teacherTopic || "Uploaded List",
+          };
+        });
+      } else {
+        defaultSamples = teacherLevel === "preschool" ? [
+          { id: "fa1", word: "Cat", translation: "Con mèo", phonetic: "/kæt/", sentence: "The little cat says meow meow.", sentenceTranslation: "Chú mèo nhỏ kêu meow meow.", illustration: "🐱", category: "Animals" },
+          { id: "fa2", word: "Dog", translation: "Con chó", phonetic: "/dɒɡ/", sentence: "The happy dog wags its tail.", sentenceTranslation: "Chú chó vui vẻ vẫy đuôi.", illustration: "🐶", category: "Animals" },
+          { id: "fa3", word: "Monkey", translation: "Con khỉ", phonetic: "/ˈmʌŋ.ki/", sentence: "The monkey loves eating sweet bananas.", sentenceTranslation: "Chú khỉ thích ăn những quả chuối ngọt lịm.", illustration: "🐵", category: "Animals" }
+        ] : [
+          { id: "fs1", word: "Book", translation: "Quyển sách", phonetic: "/bʊk/", sentence: "This book has funny stories.", sentenceTranslation: "Quyển sách này có những câu chuyện thú vị.", illustration: "📕", category: "School" },
+          { id: "fs2", word: "Pencil", translation: "Bút chì", phonetic: "/ˈpen.səl/", sentence: "I draw a smiling flower with my pencil.", sentenceTranslation: "Tớ vẽ một bông hoa mỉm cười bằng bút chì của tớ.", illustration: "✏️", category: "School" }
+        ];
+      }
 
       const parsedDeadline = teacherDeadline ? new Date(teacherDeadline).getTime() : undefined;
       const newLesson: Lesson = {
@@ -1244,14 +1263,34 @@ export default function App() {
       console.warn("Lỗi tạo bài học của học sinh, chuyển sang fallback:", err);
       // Fallback words
       const fallbackTitle = studentTopic ? `🎈 AI: ${studentTopic}` : "🎈 Bài Học Tiếng Anh";
-      const defaultSamples = (studentLevel === "pre-starter" || studentLevel === "starter" || studentLevel === "preschool") ? [
-        { id: "sfa1", word: "Apple", translation: "Quả táo", phonetic: "/ˈæp.əl/", sentence: "The red apple is sweet.", sentenceTranslation: "Quả táo đỏ rất là ngọt.", illustration: "🍎", category: "Fruits" },
-        { id: "sfa2", word: "Banana", translation: "Quả chuối", phonetic: "/bəˈnɑː.nə/", sentence: "A yellow banana is yummy.", sentenceTranslation: "Quả chuối vàng ăn thật là ngon lành.", illustration: "🍌", category: "Fruits" },
-        { id: "sfa3", word: "Orange", translation: "Quả cam", phonetic: "/ˈɒr.ɪndʒ/", sentence: "I love drinking orange juice.", sentenceTranslation: "Tớ rất thích uống nước cam.", illustration: "🍊", category: "Fruits" }
-      ] : [
-        { id: "sfs1", word: "Computer", translation: "Máy tính", phonetic: "/kəmˈpjuː.tər/", sentence: "We play fun educational games on the computer.", sentenceTranslation: "Chúng tớ chơi những trò chơi học tập bổ ích trên máy tính.", illustration: "💻", category: "Tech" },
-        { id: "sfs2", word: "Schoolbag", translation: "Cặp sách", phonetic: "/ˈskuːl.bæɡ/", sentence: "I put my new books inside my schoolbag.", sentenceTranslation: "Tớ cất những quyển sách mới vào trong cặp học sinh của tớ.", illustration: "🎒", category: "School" }
-      ];
+      
+      // If user provided a word list, build fallback from their actual words
+      let defaultSamples: any[];
+      if (studentRawContent && studentRawContent.trim()) {
+        const inputItems = studentRawContent.split(/[,;\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+        defaultSamples = inputItems.map((item, idx) => {
+          const capitalizedWord = item.charAt(0).toUpperCase() + item.slice(1);
+          return {
+            id: `sfa-input-${idx}`,
+            word: capitalizedWord,
+            translation: capitalizedWord,
+            phonetic: `/${item.toLowerCase()}/`,
+            sentence: `I like ${item.toLowerCase()}.`,
+            sentenceTranslation: `Tớ thích ${item.toLowerCase()}.`,
+            illustration: "📝",
+            category: studentTopic || "Uploaded List",
+          };
+        });
+      } else {
+        defaultSamples = (studentLevel === "pre-starter" || studentLevel === "starter" || studentLevel === "preschool") ? [
+          { id: "sfa1", word: "Apple", translation: "Quả táo", phonetic: "/ˈæp.əl/", sentence: "The red apple is sweet.", sentenceTranslation: "Quả táo đỏ rất là ngọt.", illustration: "🍎", category: "Fruits" },
+          { id: "sfa2", word: "Banana", translation: "Quả chuối", phonetic: "/bəˈnɑː.nə/", sentence: "A yellow banana is yummy.", sentenceTranslation: "Quả chuối vàng ăn thật là ngon lành.", illustration: "🍌", category: "Fruits" },
+          { id: "sfa3", word: "Orange", translation: "Quả cam", phonetic: "/ˈɒr.ɪndʒ/", sentence: "I love drinking orange juice.", sentenceTranslation: "Tớ rất thích uống nước cam.", illustration: "🍊", category: "Fruits" }
+        ] : [
+          { id: "sfs1", word: "Computer", translation: "Máy tính", phonetic: "/kəmˈpjuː.tər/", sentence: "We play fun educational games on the computer.", sentenceTranslation: "Chúng tớ chơi những trò chơi học tập bổ ích trên máy tính.", illustration: "💻", category: "Tech" },
+          { id: "sfs2", word: "Schoolbag", translation: "Cặp sách", phonetic: "/ˈskuːl.bæɡ/", sentence: "I put my new books inside my schoolbag.", sentenceTranslation: "Tớ cất những quyển sách mới vào trong cặp học sinh của tớ.", illustration: "🎒", category: "School" }
+        ];
+      }
 
       const newLesson: Lesson = {
         id: `lesson-${Date.now()}`,
@@ -3191,7 +3230,7 @@ export default function App() {
                                 <motion.span
                                   animate={{ scale: [1, 1.1, 1] }}
                                   transition={{ repeat: Infinity, duration: 4 }}
-                                  className="text-8xl mb-6"
+                                  className="text-8xl mb-4"
                                 >
                                   {activeLesson.words[activeWordIdx].illustration}
                                 </motion.span>
@@ -3201,6 +3240,13 @@ export default function App() {
                                 <p className="font-mono text-purple-600 text-md mt-1 italic font-semibold">
                                   {activeLesson.words[activeWordIdx].phonetic}
                                 </p>
+                                {/* Sentence preview on front of card */}
+                                <div className="mt-3 px-3 py-2 bg-indigo-50/70 rounded-xl w-full text-center">
+                                  <p className="text-xs text-slate-400 uppercase font-black tracking-widest leading-none mb-1">{t("Example", "Ví dụ")}</p>
+                                  <p className="font-sans font-semibold text-sm text-indigo-800 leading-snug">
+                                    {activeLesson.words[activeWordIdx].sentence}
+                                  </p>
+                                </div>
                               </div>
 
                               <div className="w-full flex items-center justify-center pt-2">
@@ -3264,21 +3310,43 @@ export default function App() {
                         {activeLesson.words.map((w) => (
                           <div
                             key={w.id}
-                            className="p-4 bg-sky-50/50 rounded-2xl border-2 border-sky-100 flex items-center justify-between gap-4"
+                            className="p-4 bg-sky-50/50 rounded-2xl border-2 border-sky-100 flex flex-col gap-3"
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="text-4xl">{w.illustration}</span>
-                              <div>
-                                <h5 className="font-sans font-black text-indigo-900 text-sm leading-none">{w.word}</h5>
-                                <p className="text-xs text-slate-500 mt-1">{w.translation}</p>
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <span className="text-4xl">{w.illustration}</span>
+                                <div>
+                                  <h5 className="font-sans font-black text-indigo-900 text-sm leading-none">{w.word}</h5>
+                                  <p className="text-xs text-slate-500 mt-1">{w.translation}</p>
+                                </div>
+                              </div>
+
+                              <div
+                                onClick={() => triggerStarAward(1)}
+                                className="focus:outline-none"
+                              >
+                                <SoundButton text={w.word} size="md" />
                               </div>
                             </div>
 
-                            <div
-                              onClick={() => triggerStarAward(1)}
-                              className="focus:outline-none"
-                            >
-                              <SoundButton text={w.word} size="md" />
+                            {/* Sentence section */}
+                            <div className="bg-sky-100/50 rounded-xl px-3 py-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex-1">
+                                  <p className="font-sans font-semibold text-xs text-indigo-800 leading-snug">
+                                    {w.sentence}
+                                  </p>
+                                  <p className="font-sans text-xs text-slate-500 mt-0.5 italic leading-snug">
+                                    {w.sentenceTranslation}
+                                  </p>
+                                </div>
+                                <div
+                                  onClick={() => triggerStarAward(1)}
+                                  className="focus:outline-none flex-shrink-0"
+                                >
+                                  <SoundButton text={w.sentence} size="sm" />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -3318,10 +3386,22 @@ export default function App() {
                             <h4 className="font-sans font-black text-2xl text-purple-900 leading-none mb-1">
                               {activeLesson.words[activeWordIdx].word}
                             </h4>
-                            <p className="font-mono text-xs text-purple-500 font-semibold mb-3">
+                            <p className="font-mono text-xs text-purple-500 font-semibold mb-2">
                               {activeLesson.words[activeWordIdx].phonetic}
                             </p>
-                            <SoundButton text={activeLesson.words[activeWordIdx].word} size="md" />
+                            {/* Sentence in read/speaking tab */}
+                            <div className="bg-purple-100/50 rounded-xl px-3 py-2 mb-3">
+                              <p className="font-sans font-semibold text-sm text-purple-900 leading-snug">
+                                {activeLesson.words[activeWordIdx].sentence}
+                              </p>
+                              <p className="font-sans text-xs text-slate-500 mt-1 italic leading-snug">
+                                {activeLesson.words[activeWordIdx].sentenceTranslation}
+                              </p>
+                            </div>
+                            <div className="flex gap-2 items-center justify-center md:justify-start">
+                              <SoundButton text={activeLesson.words[activeWordIdx].word} size="md" />
+                              <SoundButton text={activeLesson.words[activeWordIdx].sentence} size="sm" />
+                            </div>
                           </div>
                         </div>
 
