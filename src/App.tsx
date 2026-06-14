@@ -3240,13 +3240,6 @@ export default function App() {
                                 <p className="font-mono text-purple-600 text-md mt-1 italic font-semibold">
                                   {activeLesson.words[activeWordIdx].phonetic}
                                 </p>
-                                {/* Sentence preview on front of card */}
-                                <div className="mt-3 px-3 py-2 bg-indigo-50/70 rounded-xl w-full text-center">
-                                  <p className="text-xs text-slate-400 uppercase font-black tracking-widest leading-none mb-1">{t("Example", "Ví dụ")}</p>
-                                  <p className="font-sans font-semibold text-sm text-indigo-800 leading-snug">
-                                    {activeLesson.words[activeWordIdx].sentence}
-                                  </p>
-                                </div>
                               </div>
 
                               <div className="w-full flex items-center justify-center pt-2">
@@ -3257,26 +3250,42 @@ export default function App() {
                             // Back of card
                             <>
                               <div className="w-full flex justify-between items-center border-b border-dashed border-amber-200 pb-2">
-                                <span className="text-xs font-semibold text-amber-700">{t("✓ Card Meaning", "✓ Thẻ dịch")}</span>
+                                <span className="text-xs font-black text-amber-700">{t("✓ Card Details", "✓ Chi tiết thẻ")}</span>
                                 <span className="text-xs font-semibold text-amber-600">{t("Flip Back ⬅", "Lật lại ⬅")}</span>
                               </div>
 
-                              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-                                <h4 className="font-sans font-black text-3xl text-amber-900 mb-6 font-semibold">
-                                  {activeLesson.words[activeWordIdx].translation}
-                                </h4>
-                                
-                                <p className="text-xs text-slate-400 uppercase font-black tracking-widest leading-none mb-1">{t("Sentence", "Mẫu câu")}</p>
-                                <p className="font-sans font-black text-lg text-indigo-900 leading-snug">
-                                  {activeLesson.words[activeWordIdx].sentence}
-                                </p>
-                                <p className="font-sans font-bold text-sm text-slate-500 mt-2 italic leading-snug">
-                                  ({activeLesson.words[activeWordIdx].sentenceTranslation})
-                                </p>
-                              </div>
+                              <div className="flex-1 flex flex-col items-center justify-center text-center px-4 w-full">
+                                {/* English Word & Sound */}
+                                <div className="flex items-center justify-center gap-2 mb-1">
+                                  <h4 className="font-sans font-black text-2xl text-indigo-900">
+                                    {activeLesson.words[activeWordIdx].word}
+                                  </h4>
+                                  <SoundButton text={activeLesson.words[activeWordIdx].word} size="sm" slow />
+                                </div>
 
-                              <div className="w-full flex items-center justify-center pt-2 gap-2">
-                                <SoundButton text={activeLesson.words[activeWordIdx].sentence} size="md" slow />
+                                {/* Phonetic (IPA) */}
+                                <p className="font-mono text-purple-600 text-sm italic font-semibold mb-3">
+                                  {activeLesson.words[activeWordIdx].phonetic}
+                                </p>
+
+                                {/* Vietnamese Translation */}
+                                <h5 className="font-sans font-black text-xl text-amber-600 bg-amber-100/50 px-4 py-1.5 rounded-full mb-4">
+                                  {activeLesson.words[activeWordIdx].translation}
+                                </h5>
+                                
+                                {/* Example Sentence */}
+                                <div className="bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 w-full">
+                                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1.5">{t("Example Sentence", "Mẫu câu")}</p>
+                                  <div className="flex items-center justify-center gap-2">
+                                    <p className="font-sans font-bold text-sm text-indigo-950 leading-snug">
+                                      {activeLesson.words[activeWordIdx].sentence}
+                                    </p>
+                                    <SoundButton text={activeLesson.words[activeWordIdx].sentence} size="sm" slow />
+                                  </div>
+                                  <p className="font-sans font-medium text-xs text-slate-500 mt-1 italic leading-snug">
+                                    ({activeLesson.words[activeWordIdx].sentenceTranslation})
+                                  </p>
+                                </div>
                               </div>
                             </>
                           )}

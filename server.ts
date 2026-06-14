@@ -295,6 +295,40 @@ const ai = apiKey
     })
   : null;
 
+// Helper to parse and clean raw content inputs
+interface CleanedInput {
+  original: string;
+  english: string;
+  vietnamese: string;
+}
+
+function parseRawContent(rawContent: string): CleanedInput[] {
+  let lines = rawContent.split(/[\n;]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+  if (lines.length === 1 && lines[0].includes(",")) {
+    lines = lines[0].split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+  }
+  
+  return lines.map(line => {
+    let english = line;
+    let vietnamese = "";
+    
+    // Split by common separators: " - ", " – ", " : ", " / ", " (", "=>"
+    const separators = [" - ", " – ", " : ", " / ", " (", "=>"];
+    for (const sep of separators) {
+      const idx = line.indexOf(sep);
+      if (idx !== -1) {
+        english = line.substring(0, idx).trim();
+        vietnamese = line.substring(idx + sep.length).replace(/\)$/, "").trim();
+        break;
+      }
+    }
+    
+    // Clean leading numbers
+    english = english.replace(/^\d+[\s.\-_)]+/, "").trim();
+    return { original: line, english, vietnamese };
+  }).filter(item => item.english.length > 0);
+}
+
 // API Route: Generate lesson from topic or uploaded content
 app.post("/api/generate-lesson", async (req: Request, res: Response) => {
   try {
@@ -361,18 +395,19 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
 
 CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
 1. PRESERVE ORIGINAL CONTENT: You MUST extract and output the EXACT English words and matching sentences appearing in the uploaded file/image. Do NOT create, alter, or replace them with custom sentences or vocabulary. Keep them exactly as they are in the file. Do not be creative.
-2. GRAMMATICAL ACCURACY: Double check all English grammar. Every sentence must be grammatically correct and natural for children.
-3. Every card must have a word and a matching sentence.
-4. If the file contains only full sentences but no isolated words, extract keywords from those sentences to use as "word", and use the exact visual sentence as "sentence".
-5. If the file contains only isolated words but no sentences, write short, grammatically perfect, and simple sentences containing that word.
-6. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
+2. DO NOT MIX LANGUAGES IN FIELDS: The 'word' field must contain ONLY the English word/phrase (e.g. "Classroom"). Do NOT add Vietnamese translation text or separators (like " - lớp học") into the 'word' or 'sentence' fields.
+3. GRAMMATICAL ACCURACY: Double check all English grammar. Every sentence must be grammatically correct and natural for children.
+4. Every card must have a word and a matching sentence.
+5. If the file contains only full sentences but no isolated words, extract keywords from those sentences to use as "word", and use the exact visual sentence as "sentence".
+6. If the file contains only isolated words but no sentences, write short, grammatically perfect, and simple sentences containing that word.
+7. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
 - The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English words, explanations, or definitions. For example, if the word is 'Apple', translation must be 'Quả táo'.
 - The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
-7. Each vocabulary item in the list must feature:
-- word: The English vocabulary word with first letters capitalized.
+8. Each vocabulary item in the list must feature:
+- word: The English vocabulary word (strictly English, with first letters capitalized).
 - translation: The exact Vietnamese translation/meaning.
 - phonetic: Accurate IPA phonetics (for example, '/kæt/').
-- sentence: The English example sentence (preserved from the file exactly).
+- sentence: The English example sentence (preserved from the file exactly, strictly English).
 - sentenceTranslation: The exact Vietnamese translation of the sentence.
 - illustration: Exactly one colorful, vivid Emoji representing the word.`;
       
@@ -380,31 +415,28 @@ CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
         prompt += `\nAdditional Focus: Prioritize and guide the selection of these vocabulary words around this topic: "${topic}".`;
       }
     } else if (rawContent) {
-      // Count the number of words/items the user provided to enforce exact output count
-      const inputItems = rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      const inputItems = parseRawContent(rawContent);
       const inputCount = inputItems.length;
-      prompt = `Please optimize or create an English learning curriculum based entirely on the following raw text list inside:
-"${rawContent}".
+      prompt = `Please optimize or create an English learning curriculum based entirely on the following raw text list.
+You MUST generate EXACTLY ${inputCount} vocabulary cards in your response — one for each input item. The number of objects in the "words" array MUST equal ${inputCount}.
 
-TOTAL INPUT COUNT: The user has provided exactly ${inputCount} words/items. You MUST generate EXACTLY ${inputCount} vocabulary cards in your response — one for each input word/item. Do NOT generate fewer. Do NOT skip, merge, or truncate any items. The number of objects in the "words" array MUST equal ${inputCount}.
-
-The ${inputCount} input items are:
-${inputItems.map((item: string, i: number) => `${i + 1}. "${item}"`).join('\n')}
+Here is the parsed input list of ${inputCount} items:
+${inputItems.map((item, i) => `${i + 1}. English Word/Phrase: "${item.english}"${item.vietnamese ? `, Vietnamese Translation: "${item.vietnamese}"` : ""}`).join('\n')}
 
 CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
-1. PRESERVE ORIGINAL CONTENT: Keep and extract ALL ${inputCount} exact English words/phrases found in the text. Do NOT modify, replace, or select a subset of the input. Output array length MUST be ${inputCount}.
-2. If the text has example sentences or full phrases, you MUST keep those exact sentences inside the "sentence" field. Do not invent custom ones if the text has original sentences. Do not be creative (không sáng tạo).
-3. If the text consists only of isolated words, draft very clean, simple, grammatically perfect English sentences containing that word, suitable for ${level || "Starters"}. Ensure the sentences are 100% grammatically correct.
-4. If the text has only sentences but no keywords, extract key words to use as "word", and keep the visual sentence for the "sentence" field.
+1. PRESERVE ORIGINAL ENGLISH WORDS: You MUST use the exact English words/phrases listed above (e.g., "${inputItems[0]?.english}"). Do NOT add Vietnamese translation text or separators (like " - lớp học") into the "word" field. The "word" field must contain ONLY the English word/phrase.
+2. GRAMMATICAL ACCURACY: Double check all English grammar. Every sentence must be grammatically correct and natural for children.
+3. If the input list includes a Vietnamese translation, use that translation for the 'translation' field (or optimize it to be child-friendly). If no translation is provided, translate it accurately to Vietnamese.
+4. If the input item already contains a full sentence, use that sentence in the "sentence" field. Otherwise, write a simple, grammatically perfect English sentence containing the word.
 5. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations, or definitions.
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations, or separators.
 - The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
 6. Provide fully detailed fields for each word as requested:
-- word: The English word.
+- word: The clean English word (with no Vietnamese meaning/translation text inside it).
 - translation: The direct Vietnamese translation.
 - phonetic: Correct IPA phonetic representation.
 - sentence: The English example sentence.
-- sentenceTranslation: The matching Vietnamese translation.
+- sentenceTranslation: The matching Vietnamese translation of the English example sentence.
 - illustration: Exactly one cute emoji representing the word.
 
 FINAL REMINDER: Your output MUST contain exactly ${inputCount} items in the "words" array. Count them before responding.`;
@@ -541,27 +573,25 @@ CRITICAL RULES:
 
       // POST-GENERATION VALIDATION: Ensure output count matches input count for rawContent
       if (rawContent && parsedData.words && Array.isArray(parsedData.words)) {
-        const inputItems = rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+        const inputItems = parseRawContent(rawContent);
         const inputCount = inputItems.length;
         const outputCount = parsedData.words.length;
         
         if (outputCount < inputCount) {
           console.warn(`[Gemini Validation] Output has ${outputCount} words but input had ${inputCount}. Filling missing ${inputCount - outputCount} words.`);
           
-          // Find which input words are missing from the output
           const existingWordsLower = new Set(parsedData.words.map((w: any) => w.word?.toLowerCase()));
           
-          for (const inputItem of inputItems) {
-            if (!existingWordsLower.has(inputItem.toLowerCase())) {
-              // This input word is missing from output - add a basic entry
-              const capitalizedWord = inputItem.charAt(0).toUpperCase() + inputItem.slice(1).toLowerCase();
+          for (const item of inputItems) {
+            if (!existingWordsLower.has(item.english.toLowerCase())) {
+              const capitalizedWord = item.english.charAt(0).toUpperCase() + item.english.slice(1).toLowerCase();
               parsedData.words.push({
                 id: `w-${Date.now()}-fill-${parsedData.words.length}`,
                 word: capitalizedWord,
-                translation: capitalizedWord, // Will show the English word as placeholder
+                translation: item.vietnamese || capitalizedWord,
                 phonetic: `/${capitalizedWord.toLowerCase()}/`,
                 sentence: `I like ${capitalizedWord.toLowerCase()}.`,
-                sentenceTranslation: `Tớ thích ${capitalizedWord.toLowerCase()}.`,
+                sentenceTranslation: `Tớ thích ${item.vietnamese ? item.vietnamese.toLowerCase() : capitalizedWord.toLowerCase()}.`,
                 illustration: "📝",
                 category: topic || "Uploaded List",
               });
@@ -587,17 +617,17 @@ CRITICAL RULES:
     
     // If user provided rawContent, build fallback from their actual input words
     if (req.body.rawContent) {
-      const inputItems = req.body.rawContent.split(/[,;\n]+/).map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      const inputItems = parseRawContent(req.body.rawContent);
       console.log(`[Fallback] Building from ${inputItems.length} user-provided words`);
-      mappedWords = inputItems.map((item: string, idx: number) => {
-        const capitalizedWord = item.charAt(0).toUpperCase() + item.slice(1);
+      mappedWords = inputItems.map((item, idx) => {
+        const capitalizedWord = item.english.charAt(0).toUpperCase() + item.english.slice(1);
         return {
           id: `w-fallback-${Date.now()}-${idx}`,
           word: capitalizedWord,
-          translation: capitalizedWord,
-          phonetic: `/${item.toLowerCase()}/`,
-          sentence: `I like ${item.toLowerCase()}.`,
-          sentenceTranslation: `Tớ thích ${item.toLowerCase()}.`,
+          translation: item.vietnamese || capitalizedWord,
+          phonetic: `/${item.english.toLowerCase()}/`,
+          sentence: `I like ${item.english.toLowerCase()}.`,
+          sentenceTranslation: `Tớ thích ${item.vietnamese ? item.vietnamese.toLowerCase() : item.english.toLowerCase()}.`,
           illustration: "📝",
           category: req.body.topic || "Uploaded List",
         };

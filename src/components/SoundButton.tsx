@@ -169,6 +169,26 @@ function getExpressiveConfig(text: string, slow: boolean): SpeechConfig {
   }
 }
 
+// Safeguard to strip any Vietnamese characters or translations from the speech text
+function cleanSpeechText(text: string): string {
+  const vnChars = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]/i;
+  
+  if (vnChars.test(text)) {
+    const separators = [" - ", " – ", " : ", " / ", " (", "=>"];
+    for (const sep of separators) {
+      const idx = text.indexOf(sep);
+      if (idx !== -1) {
+        return text.substring(0, idx).trim();
+      }
+    }
+    
+    // If it contains Vietnamese and has no standard separators, strip any Vietnamese-looking words
+    // to protect against reading Vietnamese.
+    return text.replace(/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ\w]*[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]+[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ\w]*/gi, "").trim();
+  }
+  return text;
+}
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -223,7 +243,10 @@ export const SoundButton: React.FC<SoundButtonProps> = ({
       refreshVoices();
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanedText = cleanSpeechText(text);
+    if (!cleanedText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.lang = "en-US";
     utteranceRef.current = utterance;
 
@@ -233,7 +256,7 @@ export const SoundButton: React.FC<SoundButtonProps> = ({
     }
 
     // Apply expressive speech parameters
-    const config = getExpressiveConfig(text, slow);
+    const config = getExpressiveConfig(cleanedText, slow);
     utterance.rate = config.rate;
     utterance.pitch = config.pitch;
     utterance.volume = config.volume;
