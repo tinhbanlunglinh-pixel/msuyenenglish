@@ -40,6 +40,7 @@ import { AudioRecorder } from "./components/AudioRecorder";
 import { ReviewGames } from "./components/ReviewGames";
 import { TestEngine } from "./components/TestEngine";
 import { playSound } from "./utils/audioSynth";
+import { StudentRecordManager } from "./utils/studentRecords";
 
 interface DictionaryEntry {
   translation: string;
@@ -482,6 +483,7 @@ export default function App() {
 
   // Logged-in current student profile
   const [loggedInStudent, setLoggedInStudent] = useState<{
+    phone?: string;
     name: string;
     classId: string;
     className: string;
@@ -693,6 +695,10 @@ export default function App() {
   const [certScore, setCertScore] = useState(100);
   const [certLessonTitle, setCertLessonTitle] = useState("");
   const [certDate, setCertDate] = useState("");
+  const [certGameScore, setCertGameScore] = useState<number | null>(null);
+  const [certQuizScore, setCertQuizScore] = useState<number | null>(null);
+  const [certTotalStars, setCertTotalStars] = useState<number>(0);
+  const [certWeeklyStars, setCertWeeklyStars] = useState<number>(0);
 
   const studentLessons = lessonsList.filter((lesson) => {
     if (!loggedInStudent) return false;
@@ -965,17 +971,22 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         setLoggedInStudent({
+          phone: cleanPhone,
           name: data.name,
           classId: data.classId,
           className: data.className,
           teacherName: data.teacherName,
         });
 
+        const record = StudentRecordManager.getRecord(cleanPhone, data.name);
+        setDailyStars(record.totalStars);
+
         if (data.linkedLesson) {
           setSelectedLessonId((prev) => (prev && prev !== "lesson-1") ? prev : data.linkedLesson.id);
         }
 
         localStorage.setItem("minion_student_session", JSON.stringify({
+          phone: cleanPhone,
           name: data.name,
           classId: data.classId,
           className: data.className,
@@ -1006,11 +1017,14 @@ export default function App() {
           const isMamNon = foundClass.name.toLowerCase().includes("mầm") || foundClass.name.toLowerCase().includes("lá");
           const teacherName = isMamNon ? "Cô Thảo" : "Thầy Hùng";
           setLoggedInStudent({
+            phone: cleanPhone,
             name: foundStudent.name,
             classId: foundClass.id,
             className: foundClass.name,
             teacherName: teacherName
           });
+          const record = StudentRecordManager.getRecord(cleanPhone, foundStudent.name);
+          setDailyStars(record.totalStars);
           playSound.playSuccess();
           setPhoneLinkSuccess(`🎉 Kết nối thành công bé ${foundStudent.name} (lớp ${foundClass.name})`);
           setTimeout(() => {
@@ -1228,6 +1242,25 @@ export default function App() {
     const d = new Date(attempt.timestamp);
     setCertDate(`Ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}`);
     
+    if (loggedInStudent && loggedInStudent.phone) {
+       const record = StudentRecordManager.getRecord(loggedInStudent.phone, loggedInStudent.name);
+       setCertTotalStars(record.totalStars);
+       setCertWeeklyStars(record.weeklyStars);
+       if (record.lessonResults && record.lessonResults[attempt.lessonId]) {
+         setCertGameScore(record.lessonResults[attempt.lessonId].gameScore ?? null);
+         setCertQuizScore(record.lessonResults[attempt.lessonId].quizScore ?? null);
+       } else {
+         setCertGameScore(null);
+         setCertQuizScore(null);
+       }
+    } else {
+       // fallback for those without phone
+       setCertTotalStars(currentGoldStars);
+       setCertWeeklyStars(0);
+       setCertGameScore(null);
+       setCertQuizScore(attempt.score);
+    }
+
     setSelectedCertificateAttempt(attempt);
     playSound.playFanfare();
   };
@@ -1381,6 +1414,11 @@ export default function App() {
   // Student API Trigger: Generate Lesson with Gemini (by topic, content, or file)
   const handleStudentGenerateLessonSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = studentPhoneInput.trim().replace(/[\s-]/g, "");
+    if (!cleanPhone) {
+      alert("Vui lòng nhập Số Điện Thoại để lưu trữ tiến độ và nhận giấy khen nhé! ⭐");
+      return;
+    }
     const matchedName = studentCustomName.trim();
     if (!matchedName) {
       alert("Con hãy nhập tên của con ở ô phía trên trước nhe! ⭐");
@@ -1391,7 +1429,11 @@ export default function App() {
       return;
     }
 
+    // Ensure student record exists
+    const record = StudentRecordManager.getRecord(cleanPhone, matchedName);
+
     const studentProfile = {
+      phone: cleanPhone,
       name: matchedName,
       classId: "free",
       className: "Lớp Học Cô Phượng Uyên",
@@ -1400,6 +1442,7 @@ export default function App() {
 
     // Save profile to state and storage
     setLoggedInStudent(studentProfile);
+    setDailyStars(record.totalStars);
     localStorage.setItem("minion_student_name", matchedName);
     localStorage.setItem("minion_student_session", JSON.stringify(studentProfile));
 
@@ -1675,12 +1718,29 @@ export default function App() {
                   />
                 </div>
 
-                {/* Score Layout representation */}
-                <div className="inline-flex flex-col items-center justify-center my-4 bg-gradient-to-r from-red-500 via-amber-500 to-indigo-600 text-white font-mono px-6 py-2.5 rounded-2xl shadow-md border-2 border-white animate-bounce">
-                  <span className="text-[10px] uppercase font-bold tracking-widest leading-none">{t("EVALUATION SCORE", "ĐIỂM SỐ ĐẠT ĐƯỢC")}</span>
-                  <span className="font-sans font-black text-xl md:text-2xl leading-none mt-1">
-                    {certScore === 100 ? "EXCELLENT STATUS: " : certScore >= 80 ? "DISTINCTION STATUS: " : "COMPLETED STATUS: "} {certScore}/100 POINTS
-                  </span>
+                {/* Unified Scores Display */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-4 max-w-2xl mx-auto w-full">
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-2xl p-3 shadow-md border-2 border-indigo-100">
+                    <span className="text-[10px] uppercase font-bold tracking-widest leading-none mb-1 text-indigo-100">ĐIỂM SÁT HẠCH (QUIZ)</span>
+                    <span className="font-sans font-black text-xl leading-none">
+                      {certQuizScore !== null ? `${certQuizScore}/100` : "Chưa làm"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl p-3 shadow-md border-2 border-emerald-100">
+                    <span className="text-[10px] uppercase font-bold tracking-widest leading-none mb-1 text-teal-50">ĐIỂM CHƠI GAME</span>
+                    <span className="font-sans font-black text-xl leading-none">
+                      {certGameScore !== null ? `${certGameScore}/100` : "Chưa làm"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-amber-400 to-yellow-500 text-white rounded-2xl p-3 shadow-md border-2 border-amber-100 animate-pulse">
+                    <span className="text-[10px] uppercase font-bold tracking-widest leading-none mb-1 text-yellow-50">SAO VÀNG TÍCH LŨY</span>
+                    <div className="flex items-center gap-1 font-sans font-black text-xl leading-none">
+                       {certTotalStars} <span className="text-sm">⭐</span>
+                    </div>
+                    {certWeeklyStars > 0 && <span className="text-[8px] mt-1 text-yellow-100">(Tuần này: +{certWeeklyStars}⭐)</span>}
+                  </div>
                 </div>
 
                 {/* Credentials grid */}
@@ -1945,12 +2005,25 @@ export default function App() {
                         setStudentCustomName(val);
                         // Sync with loggedInStudent immediately so other components stay updated
                         setLoggedInStudent({
+                          phone: studentPhoneInput.trim().replace(/[\s-]/g, ""),
                           name: val,
                           classId: "free",
                           className: "Lớp Học Cô Phượng Uyên",
                           teacherName: "Cô Phượng Uyên"
                         });
                       }}
+                      className="w-full p-3.5 rounded-xl bg-white border-2 border-blue-200 text-xs font-black text-slate-800 focus:border-blue-500 outline-none transition-all shadow-sm"
+                    />
+                    
+                    <label className="block text-[11px] uppercase font-black text-blue-900 tracking-wider mt-3">
+                      SĐT Lưu Trữ Tiến Độ (Phone Number) 📱
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Ví dụ: 0912345678"
+                      value={studentPhoneInput}
+                      onChange={(e) => setStudentPhoneInput(e.target.value)}
                       className="w-full p-3.5 rounded-xl bg-white border-2 border-blue-200 text-xs font-black text-slate-800 focus:border-blue-500 outline-none transition-all shadow-sm"
                     />
                   </div>
@@ -2944,6 +3017,13 @@ export default function App() {
                   // Every time they do well, they earn stars. Sát hạch done: gift gold!
                   const earnedStars = res.score === 100 ? 50 : res.score >= 80 ? 35 : 15;
                   triggerStarAward(earnedStars);
+                  
+                  if (loggedInStudent && loggedInStudent.phone && activeLesson) {
+                    StudentRecordManager.updateLessonResult(loggedInStudent.phone, activeLesson.id, {
+                      quizScore: res.score,
+                      starsEarned: earnedStars
+                    });
+                  }
 
                   // LOG SUBMISSION RECORD IN GLOBAL LOCAL DATABASE
                   const isLateSubmitted = activeLesson.deadline ? Date.now() > activeLesson.deadline : false;

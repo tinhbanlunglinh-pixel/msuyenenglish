@@ -21,7 +21,17 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [score, setScore] = useState<number | null>(null);
+  // CEFR Scoring states
+  const [transcript, setTranscript] = useState<string>("");
+  const [scoreObj, setScoreObj] = useState<{
+    score: number;
+    cefr: string;
+    message: string;
+    wordAnalysis: { word: string; isCorrect: boolean }[];
+  } | null>(null);
+
+  const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef<string>("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -33,11 +43,52 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   // Stop tracking canvas transitions when destroyed
   useEffect(() => {
+    // Reset state when expectedText changes (like when moving to next word)
+    setIsRecording(false);
+    setAudioUrl(null);
+    setScoreObj(null);
+    setTranscript("");
+    finalTranscriptRef.current = "";
+    
     return () => {
       stopVisualizer();
       cleanupMedia();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
     };
-  }, []);
+  }, [expectedText]);
+
+  const cleanWord = (w: string) => w.toLowerCase().replace(/[.,?!:;]/g, "");
+
+  const evaluatePronunciation = (actualTranscript: string) => {
+    const cleanExpected = expectedText.split(/\s+/);
+    const actualWords = actualTranscript.split(/\s+/).map(cleanWord);
+    
+    let correctCount = 0;
+    const analysis = cleanExpected.map((rawWord) => {
+      const cw = cleanWord(rawWord);
+      // Very simple matching for kids
+      const isCorrect = actualWords.includes(cw) || actualWords.some(aw => aw.includes(cw) || cw.includes(aw) && aw.length > 2);
+      if (isCorrect) correctCount++;
+      return { word: rawWord, isCorrect };
+    });
+    
+    const percentage = Math.round((correctCount / Math.max(1, cleanExpected.length)) * 100);
+    
+    let cefr = "A1";
+    let message = "Hãy thử lại nhé!";
+    if (percentage >= 90) { cefr = "C1"; message = "Tuyệt vời! Phát âm chuẩn bản xứ!"; }
+    else if (percentage >= 70) { cefr = "B1"; message = "Khá tốt! Phát âm rất rõ ràng."; }
+    else if (percentage >= 50) { cefr = "A2"; message = "Cần cố gắng! Bé luyện thêm một chút nhé."; }
+    
+    setScoreObj({
+      score: percentage,
+      cefr,
+      message,
+      wordAnalysis: analysis
+    });
+  };
 
   const cleanupMedia = () => {
     if (streamRef.current) {
@@ -49,8 +100,35 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const startRecording = async () => {
     playSound.playClick();
     setAudioUrl(null);
-    setScore(null);
+    setScoreObj(null);
+    setTranscript("");
+    finalTranscriptRef.current = "";
     audioChunksRef.current = [];
+
+    // Init Speech Recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        let finalStr = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalStr += event.results[i][0].transcript + " ";
+          } else {
+            interim += event.results[i][0].transcript + " ";
+          }
+        }
+        if (finalStr) finalTranscriptRef.current += finalStr;
+        setTranscript((finalTranscriptRef.current + interim).trim());
+      };
+      
+      recognitionRef.current = recognition;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -70,13 +148,15 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
         
-        // AI Pronunciation scoring engine: rate on a 10-point scale
-        // Generate a fun grade from 8 to 10 points (highly encouraging for children)
-        const generatedScore = Math.floor(Math.random() * 3) + 8; // 8, 9, or 10
-        setScore(generatedScore);
-
-        if (onRecordComplete) onRecordComplete(url);
-        playSound.playSuccess();
+        if (recognitionRef.current) {
+          try { recognitionRef.current.stop(); } catch(e) {}
+        }
+        
+        setTimeout(() => {
+           evaluatePronunciation(finalTranscriptRef.current || transcript);
+           if (onRecordComplete) onRecordComplete(url);
+           playSound.playSuccess();
+        }, 500);
       };
 
       // Set up simple canvas visualizer
@@ -84,6 +164,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       // Start recording
       mediaRecorder.start();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.start(); } catch(e) {}
+      }
       setIsRecording(true);
     } catch (err) {
       console.warn("Mirophone authorization denied", err);
@@ -186,7 +269,18 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         <h4 className="font-sans font-black text-amber-900 text-md">Bé Luyện Phát Âm (Speaking Practice)</h4>
       </div>
       <p className="text-sm text-amber-700 text-center mb-4 font-bold">
-        Đọc to từ/câu sau (Read aloud): <span className="font-black text-purple-600 bg-white px-2 py-0.5 rounded shadow-sm">"{expectedText}"</span>
+        Đọc to từ/câu sau (Read aloud): 
+        <div className="font-black text-2xl mt-2 bg-white px-4 py-2 rounded-xl shadow-sm flex flex-wrap justify-center gap-1.5">
+          {scoreObj ? (
+            scoreObj.wordAnalysis.map((item, idx) => (
+              <span key={idx} className={item.isCorrect ? "text-green-500" : "text-red-500"}>
+                {item.word}
+              </span>
+            ))
+          ) : (
+            <span className="text-purple-600">{expectedText}</span>
+          )}
+        </div>
       </p>
 
       {/* Visual Canvas Area */}
@@ -249,20 +343,25 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         )}
       </div>
 
-      {score !== null && (
+      {scoreObj !== null && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="mt-4 p-3 bg-white rounded-xl border-2 border-green-200 flex flex-col items-center shadow-sm w-full text-center"
         >
-          <div className="text-2xl font-sans font-black text-green-600">
-            Kết quả của bé: <span className="text-3xl text-orange-500">{score}/10</span> điểm
+          <div className="text-sm font-sans font-black text-slate-600 mb-1">
+            Độ chính xác: <span className="text-2xl text-emerald-500">{scoreObj.score}%</span>
+          </div>
+          <div className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-black uppercase mb-2 shadow-sm border border-amber-200">
+            Chuẩn CEFR: {scoreObj.cefr}
           </div>
           <p className="text-xs text-slate-500 mt-1 font-bold mb-3">
-            {score === 10 && "🌟 Tuyệt vời! Phát âm cực kỳ chuẩn xác như người bản xứ!"}
-            {score === 9 && "👏 Rất tốt! Bé phát âm rất rõ ràng và chuẩn ngữ điệu!"}
-            {score === 8 && "👍 Giỏi quá! Bé tiếp tục luyện tập để phát âm hay hơn nữa nhé!"}
+            {scoreObj.message}
           </p>
+          <div className="text-[10px] text-slate-400 italic mb-3">
+            Bé đã đọc: "{transcript || '(Không nghe rõ)'}"
+          </div>
+          
           {onNext && (
             <button
               onClick={onNext}

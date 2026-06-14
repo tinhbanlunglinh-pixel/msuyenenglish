@@ -107,7 +107,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         list.push({
           id,
           type,
-          questionText: isTranslationSame ? `Look at the picture. What is this? (Nhìn hình và chọn từ đúng)` : `Which word means: "${target.translation}"? (Từ nào có nghĩa là "${target.translation}")`,
+          questionText: isTranslationSame ? `Look at the picture. What is this?` : `Which word means: "${target.translation}"?`,
           options: opts,
           correctAnswer: target.word,
           imageUrl: target.illustration,
@@ -115,14 +115,24 @@ export const TestEngine: React.FC<TestEngineProps> = ({
       } 
       else if (type === "listen_choice") {
         const isTranslationSame = target.translation.toLowerCase() === target.word.toLowerCase();
-        const opts = [target.translation, ...words.filter((w) => w.id !== target.id).slice(0, 3).map((w) => w.translation)].sort(() => 0.5 - Math.random());
+        
+        let opts = [];
+        if (isTranslationSame) {
+          opts = [target.word, ...words.filter((w) => w.id !== target.id).slice(0, 3).map((w) => w.word)];
+        } else {
+          const clashWords = words.filter((w) => w.id !== target.id && w.translation.toLowerCase() !== w.word.toLowerCase());
+          const finalClash = clashWords.length >= 3 ? clashWords.slice(0, 3) : words.filter((w) => w.id !== target.id).slice(0, 3);
+          opts = [target.translation, ...finalClash.map((w) => w.translation)];
+        }
+        opts = opts.sort(() => 0.5 - Math.random());
+
         list.push({
           id,
           type,
-          questionText: isTranslationSame ? "Listen and choose the correct word (Nghe và chọn từ đúng):" : "Listen and choose the correct meaning (Nghe và chọn nghĩa đúng):",
+          questionText: isTranslationSame ? "Listen and choose the correct word:" : "Listen and choose the correct meaning:",
           audioText: target.word,
           options: opts,
-          correctAnswer: target.translation,
+          correctAnswer: isTranslationSame ? target.word : target.translation,
         });
       } 
       else if (type === "fill_blank") {
@@ -139,7 +149,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         list.push({
           id,
           type,
-          questionText: isTranslationSame ? `Fill in the missing letter (Điền chữ cái còn thiếu): ${masked}` : `Fill in the missing letter for "${target.translation}" (Điền chữ cái còn thiếu): ${masked}`,
+          questionText: isTranslationSame ? `Fill in the missing letter: ${masked}` : `Fill in the missing letter for "${target.translation}": ${masked}`,
           correctAnswer: target.word.toLowerCase(),
           imageUrl: target.illustration,
         });
@@ -151,7 +161,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         list.push({
           id,
           type,
-          questionText: "Match each picture with the correct word (Ghép hình ảnh với từ tương ứng):",
+          questionText: "Match each picture with the correct word:",
           matchPairs: pairs,
           correctAnswer: JSON.stringify(pairs),
         });
@@ -173,12 +183,12 @@ export const TestEngine: React.FC<TestEngineProps> = ({
         let correct = "False";
         
         if (isTrue) {
-          info = isTranslationSame ? `Is this a "${target.word}"? (Đây có phải là "${target.word}" không?)` : `Does "${target.word}" mean "${target.translation}"? (Từ "${target.word}" có nghĩa là "${target.translation}" không?)`;
+          info = isTranslationSame ? `Is this a "${target.word}"?` : `Does "${target.word}" mean "${target.translation}"?`;
           correct = "True";
         } else {
-          const incorrectOne = words.find((w) => w.id !== target.id) || target;
-          const isIncorrectTranslationSame = incorrectOne.translation.toLowerCase() === incorrectOne.word.toLowerCase();
-          info = isTranslationSame ? `Is this a "${incorrectOne.word}"? (Đây có phải là "${incorrectOne.word}" không?)` : `Does "${target.word}" mean "${incorrectOne.translation}"? (Từ "${target.word}" có nghĩa là "${incorrectOne.translation}" không?)`;
+          const validClash = words.find((w) => w.id !== target.id && w.translation.toLowerCase() !== w.word.toLowerCase());
+          const incorrectOne = validClash || words.find((w) => w.id !== target.id) || target;
+          info = isTranslationSame ? `Is this a "${incorrectOne.word}"?` : `Does "${target.word}" mean "${incorrectOne.translation}"?`;
           correct = "False";
         }
 
@@ -457,7 +467,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
 
               {/* Dynamic content rendering */}
               <h3 className="font-sans font-black text-lg md:text-xl text-gray-800 leading-snug mb-6">
-                {q.type === "arrange_sentence" ? "Arrange the words to make a sentence (Sắp xếp các từ để tạo thành câu hoàn chỉnh):" : q.questionText}
+                {q.type === "arrange_sentence" ? "Arrange the words to make a sentence:" : q.questionText}
               </h3>
 
               {/* QUESTION FORM 1: Multiple choice standard with illustration */}

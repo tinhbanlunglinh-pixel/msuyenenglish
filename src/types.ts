@@ -105,3 +105,12 @@ export interface StudentStudySession {
   timestamp: number;
 }
 
+export interface StudentRecord {
+  phone: string;
+  name: string;
+  totalStars: number;
+  weeklyStars: number;
+  lastStarDate: number;
+  lessonResults: Record<string, { quizScore?: number; gameScore?: number; starsEarned?: number }>;
+}
+

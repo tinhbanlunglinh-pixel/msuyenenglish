@@ -26,7 +26,9 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
   const [currentGameType, setCurrentGameType] = useState<ReviewGameType>("listen_match");
   const [gameIndex, setGameIndex] = useState(0);
   const [stars, setStars] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [correctGamesCount, setCorrectGamesCount] = useState(0);
+  const [failedCurrentGame, setFailedCurrentGame] = useState(false);
+  const TOTAL_GAMES = 5;
   const [gameCompleted, setGameCompleted] = useState(false);
 
   // States for individual games
@@ -151,12 +153,13 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
     if (item.id === targetWord?.id) {
       playSound.playSuccess();
       setFeedback("correct");
+      if (!failedCurrentGame) setCorrectGamesCount(v => v + 1);
       setStars((val) => val + 10);
       if (onEarnStars) onEarnStars(10);
     } else {
       playSound.playFail();
       setFeedback("wrong");
-      setLives((val) => Math.max(0, val - 1));
+      setFailedCurrentGame(true);
     }
   };
 
@@ -198,6 +201,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
       const subsetLength = Math.min(4, words.length);
       if (matchedPairs.length + 1 >= subsetLength) {
         setFeedback("correct");
+        if (!failedCurrentGame) setCorrectGamesCount(v => v + 1);
         setStars((val) => val + 15);
         if (onEarnStars) onEarnStars(15);
       }
@@ -205,7 +209,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
       playSound.playFail();
       setSelectedEnglish(null);
       setSelectedVietnamese(null);
-      setLives((val) => Math.max(0, val - 1));
+      setFailedCurrentGame(true);
     }
   };
 
@@ -261,7 +265,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
     } else {
       playSound.playFail();
       setFeedback("wrong");
-      setLives((val) => Math.max(0, val - 1));
+      setFailedCurrentGame(true);
     }
   };
 
@@ -281,7 +285,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
       if (onEarnStars) onEarnStars(20);
     } else {
       playSound.playFail();
-      setLives((val) => Math.max(0, val - 1));
+      setFailedCurrentGame(true);
       // Float it again
       setTimeout(() => {
         setBalloons((arr) =>
@@ -307,7 +311,8 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
   };
 
   const handleRestart = () => {
-    setLives(3);
+    setCorrectGamesCount(0);
+    setFailedCurrentGame(false);
     setStars(0);
     setGameIndex(0);
     setGameCompleted(false);
@@ -407,27 +412,6 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
               Quay Lại Học Tiếp 🏠
             </button>
           </div>
-        </div>
-      ) : lives <= 0 ? (
-        // Out of Lives Screen
-        <div className="text-center py-12 flex flex-col items-center bg-white rounded-3xl p-6 border-4 border-red-200 shadow-inner min-h-[380px] justify-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
-            className="text-8xl mb-4"
-          >
-            😿
-          </motion.div>
-          <h4 className="font-sans font-black text-red-600 text-2xl mb-2">Thử Lại Nhé Bé Ơi!</h4>
-          <p className="text-gray-600 mb-6 max-w-sm mx-auto text-sm font-medium">
-            Ồ, bé hết lượt chơi mất rồi! Đừng lo lắng nhé, hãy bấm nút chơi lại để bắt đầu luyện tập và giành thêm thật nhiều Sao Vàng nha!
-          </p>
-          <button
-            onClick={handleRestart}
-            className="px-8 py-3 rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-sans font-black text-lg shadow-lg hover:from-yellow-500 hover:to-amber-600 border-b-4 border-amber-700 flex items-center gap-2 cursor-pointer duration-200"
-          >
-            <RotateCcw className="h-5 w-5" /> Chơi Lại Từ Đầu 🔄
-          </button>
         </div>
       ) : (
         <div className="relative min-h-[380px] bg-white rounded-3xl p-6 border-4 border-sky-100 flex flex-col justify-between">

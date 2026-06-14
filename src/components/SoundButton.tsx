@@ -77,6 +77,7 @@ function scoreVoice(v: SpeechSynthesisVoice): number {
   if (name.includes("woman")) score += 35;
 
   // User's specifically requested voices
+  if (name.includes("skye")) score += 500;
   if (name.includes("autonoe")) score += 300;
   if (name.includes("leda")) score += 300;
 
