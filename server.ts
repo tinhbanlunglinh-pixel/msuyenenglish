@@ -295,6 +295,74 @@ const ai = apiKey
     })
   : null;
 
+// Helper to translate common words or sentences in fallback mode
+function getFallbackTranslation(english: string): string {
+  const dict: Record<string, string> = {
+    "this is my classroom": "Đây là lớp học của tớ.",
+    "this is my classroom.": "Đây là lớp học của tớ.",
+    "classroom": "Lớp học",
+    "teacher": "Giáo viên",
+    "student": "Học sinh",
+    "school": "Trường học",
+    "book": "Quyển sách",
+    "pencil": "Bút chì",
+    "desk": "Bàn học",
+    "chair": "Ghế",
+    "blackboard": "Bảng đen",
+    "hello": "Xin chào",
+    "good morning": "Chào buổi sáng",
+    "thank you": "Cảm ơn bạn",
+    "how are you": "Bạn có khỏe không?",
+    "i like english": "Tớ thích học tiếng Anh."
+  };
+  
+  const key = english.toLowerCase().trim();
+  const cleanKey = key.endsWith(".") ? key.slice(0, -1).trim() : key;
+  return dict[key] || dict[cleanKey] || english;
+}
+
+// Helper to choose a unique, appropriate emoji for fallback illustration
+function getFallbackIllustration(word: string): string {
+  const dict: Record<string, string> = {
+    "classroom": "🏫",
+    "teacher": "👩‍🏫",
+    "student": "🧑‍🎓",
+    "school": "🎒",
+    "book": "📖",
+    "pencil": "✏️",
+    "desk": "✍️",
+    "chair": "🪑",
+    "blackboard": "📋",
+    "pen": "🖊️",
+    "eraser": "🧽",
+    "ruler": "📏",
+    "notebook": "📓",
+    "cat": "🐱",
+    "dog": "🐶",
+    "bird": "🐦",
+    "monkey": "🐵",
+    "rabbit": "🐰",
+    "lion": "🦁",
+    "elephant": "🐘",
+    "frog": "🐸",
+    "apple": "🍎",
+    "banana": "🍌",
+    "orange": "🍊"
+  };
+  
+  const key = word.toLowerCase().trim().replace(/[.,?!]/g, "");
+  if (dict[key]) return dict[key];
+  
+  // Hash the word to pick a unique emoji from a broad list of colorful kid-friendly emojis
+  const list = ["🎨", "🎭", "🎪", "🎢", "🚂", "🚀", "🛸", "🚁", "🚲", "🛹", "⚽", "🏀", "🎈", "🎁", "🧸", "🎉", "👑", "🌈", "☀️", "🍀", "🍎", "🥝", "🍉", "🍇", "🥕", "🍕", "🧁", "🍿", "🍩", "🥤", "🐾", "🦁", "🐼", "🐻", "🦊", "🐱", "🐶", "🐰", "🐨", "🐸"];
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = key.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % list.length;
+  return list[index];
+}
+
 // Helper to parse and clean raw content inputs
 interface CleanedInput {
   original: string;
@@ -585,14 +653,17 @@ CRITICAL RULES:
           for (const item of inputItems) {
             if (!existingWordsLower.has(item.english.toLowerCase())) {
               const capitalizedWord = item.english.charAt(0).toUpperCase() + item.english.slice(1).toLowerCase();
+              const isSentence = item.english.trim().split(/\s+/).length > 1;
+              const translation = item.vietnamese || getFallbackTranslation(item.english);
+              
               parsedData.words.push({
                 id: `w-${Date.now()}-fill-${parsedData.words.length}`,
                 word: capitalizedWord,
-                translation: item.vietnamese || capitalizedWord,
-                phonetic: `/${capitalizedWord.toLowerCase()}/`,
-                sentence: `I like ${capitalizedWord.toLowerCase()}.`,
-                sentenceTranslation: `Tớ thích ${item.vietnamese ? item.vietnamese.toLowerCase() : capitalizedWord.toLowerCase()}.`,
-                illustration: "📝",
+                translation: translation,
+                phonetic: `/${capitalizedWord.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
+                sentence: isSentence ? capitalizedWord : `I like ${capitalizedWord.toLowerCase()}.`,
+                sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
+                illustration: getFallbackIllustration(item.english),
                 category: topic || "Uploaded List",
               });
             }
@@ -621,14 +692,17 @@ CRITICAL RULES:
       console.log(`[Fallback] Building from ${inputItems.length} user-provided words`);
       mappedWords = inputItems.map((item, idx) => {
         const capitalizedWord = item.english.charAt(0).toUpperCase() + item.english.slice(1);
+        const isSentence = item.english.trim().split(/\s+/).length > 1;
+        const translation = item.vietnamese || getFallbackTranslation(item.english);
+        
         return {
           id: `w-fallback-${Date.now()}-${idx}`,
           word: capitalizedWord,
-          translation: item.vietnamese || capitalizedWord,
-          phonetic: `/${item.english.toLowerCase()}/`,
-          sentence: `I like ${item.english.toLowerCase()}.`,
-          sentenceTranslation: `Tớ thích ${item.vietnamese ? item.vietnamese.toLowerCase() : item.english.toLowerCase()}.`,
-          illustration: "📝",
+          translation: translation,
+          phonetic: `/${item.english.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
+          sentence: isSentence ? capitalizedWord : `I like ${item.english.toLowerCase()}.`,
+          sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
+          illustration: getFallbackIllustration(item.english),
           category: req.body.topic || "Uploaded List",
         };
       });

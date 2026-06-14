@@ -449,7 +449,7 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
                       key={item.id}
                       onClick={() => handleChoiceSelect(item)}
                       disabled={feedback !== null}
-                      className={`relative aspect-square flex flex-col items-center justify-center p-4 rounded-2xl border-4 transition-all duration-300 cursor-pointer ${
+                      className={`relative aspect-square flex flex-col items-center justify-center p-3 rounded-2xl border-4 transition-all duration-300 cursor-pointer ${
                         selectedAnswer === item.word
                           ? item.id === targetWord.id
                             ? "bg-green-100 border-green-500"
@@ -457,9 +457,12 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
                           : "bg-amber-50 border-amber-200 hover:bg-amber-100"
                       }`}
                     >
-                      <span className="text-6xl md:text-7xl mb-2">{item.illustration}</span>
+                      <span className="text-5xl md:text-6xl mb-1">{item.illustration}</span>
+                      <span className="font-sans font-black text-indigo-900 text-xs sm:text-sm text-center line-clamp-2 leading-tight">
+                        {item.word}
+                      </span>
                       {feedback !== null && (
-                        <span className="font-sans font-black text-amber-800 text-sm md:text-base">
+                        <span className="font-sans font-medium text-slate-500 text-[10px] sm:text-xs text-center line-clamp-1 mt-0.5">
                           {item.translation}
                         </span>
                       )}

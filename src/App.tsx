@@ -3273,19 +3273,21 @@ export default function App() {
                                   {activeLesson.words[activeWordIdx].translation}
                                 </h5>
                                 
-                                {/* Example Sentence */}
-                                <div className="bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 w-full">
-                                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1.5">{t("Example Sentence", "Mẫu câu")}</p>
-                                  <div className="flex items-center justify-center gap-2">
-                                    <p className="font-sans font-bold text-sm text-indigo-950 leading-snug">
-                                      {activeLesson.words[activeWordIdx].sentence}
+                                {/* Example Sentence - only show if the word is not identical to the example sentence */}
+                                {activeLesson.words[activeWordIdx].word.toLowerCase().replace(/[^a-z]/gi, "") !== activeLesson.words[activeWordIdx].sentence.toLowerCase().replace(/[^a-z]/gi, "") && (
+                                  <div className="bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 w-full">
+                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1.5">{t("Example Sentence", "Mẫu câu")}</p>
+                                    <div className="flex items-center justify-center gap-2">
+                                      <p className="font-sans font-bold text-sm text-indigo-950 leading-snug">
+                                        {activeLesson.words[activeWordIdx].sentence}
+                                      </p>
+                                      <SoundButton text={activeLesson.words[activeWordIdx].sentence} size="sm" slow />
+                                    </div>
+                                    <p className="font-sans font-medium text-xs text-slate-500 mt-1 italic leading-snug">
+                                      ({activeLesson.words[activeWordIdx].sentenceTranslation})
                                     </p>
-                                    <SoundButton text={activeLesson.words[activeWordIdx].sentence} size="sm" slow />
                                   </div>
-                                  <p className="font-sans font-medium text-xs text-slate-500 mt-1 italic leading-snug">
-                                    ({activeLesson.words[activeWordIdx].sentenceTranslation})
-                                  </p>
-                                </div>
+                                )}
                               </div>
                             </>
                           )}
