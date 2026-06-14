@@ -321,6 +321,172 @@ function getFallbackTranslation(english: string): string {
   return dict[key] || dict[cleanKey] || english;
 }
 
+// ----------------------------------------------------------------
+// HIGH-QUALITY OFFLINE COMMON WORDS DICTIONARY & POST-PROCESSING
+// Prevents lazy AI translation (e.g. Teacher -> Teacher) or phonetic
+// placeholder generations (e.g. /teacher/).
+// ----------------------------------------------------------------
+const commonWordsDict: Record<string, { translation: string, phonetic: string }> = {
+  "teacher": { translation: "Giáo viên", phonetic: "/ˈtiːtʃə(r)/" },
+  "student": { translation: "Học sinh", phonetic: "/ˈstjuːdnt/" },
+  "classroom": { translation: "Lớp học", phonetic: "/ˈklɑːsruːm/" },
+  "school": { translation: "Trường học", phonetic: "/skuːl/" },
+  "book": { translation: "Quyển sách", phonetic: "/bʊk/" },
+  "pencil": { translation: "Bút chì", phonetic: "/ˈtensl/" },
+  "desk": { translation: "Bàn học", phonetic: "/desk/" },
+  "chair": { translation: "Ghế", phonetic: "/tʃeə(r)/" },
+  "blackboard": { translation: "Bảng đen", phonetic: "/ˈblækbɔːd/" },
+  "pen": { translation: "Bút mực", phonetic: "/pen/" },
+  "eraser": { translation: "Cục tẩy", phonetic: "/ɪˈreɪzə(r)/" },
+  "ruler": { translation: "Thước kẻ", phonetic: "/ˈruːlə(r)/" },
+  "notebook": { translation: "Vở ghi", phonetic: "/ˈnəʊtbʊk/" },
+  "cat": { translation: "Con mèo", phonetic: "/kæt/" },
+  "dog": { translation: "Con chó", phonetic: "/dɒɡ/" },
+  "bird": { translation: "Con chim", phonetic: "/bɜːd/" },
+  "monkey": { translation: "Con khỉ", phonetic: "/ˈmʌŋki/" },
+  "rabbit": { translation: "Con thỏ", phonetic: "/ˈræbɪt/" },
+  "lion": { translation: "Sư tử", phonetic: "/ˈlaɪən/" },
+  "elephant": { translation: "Con voi", phonetic: "/ˈelɪfənt/" },
+  "frog": { translation: "Con ếch", phonetic: "/frɒɡ/" },
+  "apple": { translation: "Quả táo", phonetic: "/ˈæpl/" },
+  "banana": { translation: "Quả chuối", phonetic: "/bəˈnɑːnə/" },
+  "orange": { translation: "Quả cam / Màu cam", phonetic: "/ˈɒrɪndʒ/" },
+  "hello": { translation: "Xin chào", phonetic: "/həˈləʊ/" },
+  "goodbye": { translation: "Tạm biệt", phonetic: "/ˌɡʊdˈbaɪ/" },
+  "mother": { translation: "Mẹ", phonetic: "/ˈmʌðə(r)/" },
+  "father": { translation: "Bố", phonetic: "/ˈfɑːðə(r)/" },
+  "brother": { translation: "Anh/Em trai", phonetic: "/ˈbrʌðə(r)/" },
+  "sister": { translation: "Chị/Em gái", phonetic: "/ˈsɪstə(r)/" },
+  "baby": { translation: "Em bé", phonetic: "/ˈbeɪbi/" },
+  "family": { translation: "Gia đình", phonetic: "/ˈfæməli/" },
+  "house": { translation: "Ngôi nhà", phonetic: "/haʊs/" },
+  "door": { translation: "Cửa ra vào", phonetic: "/dɔː(r)/" },
+  "window": { translation: "Cửa sổ", phonetic: "/ˈwɪndəʊ/" },
+  "bag": { translation: "Cặp sách", phonetic: "/bæɡ/" },
+  "board": { translation: "Bảng học", phonetic: "/bɔːd/" },
+  "marker": { translation: "Bút viết bảng", phonetic: "/ˈmɑːkə(r)/" },
+  "computer": { translation: "Máy tính", phonetic: "/kəmˈpjuːtə(r)/" },
+  "crayon": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒn/" },
+  "crayons": { translation: "Bút sáp màu", phonetic: "/ˈkreɪɒnz/" },
+  "paper": { translation: "Tờ giấy", phonetic: "/ˈpeɪpə(r)/" },
+  "table": { translation: "Cái bàn", phonetic: "/ˈteɪbl/" },
+  "clock": { translation: "Đồng hồ", phonetic: "/klɒk/" },
+  "fish": { translation: "Con cá", phonetic: "/fɪʃ/" },
+  "bear": { translation: "Con gấu", phonetic: "/beə(r)/" },
+  "duck": { translation: "Con vịt", phonetic: "/dʌk/" },
+  "pig": { translation: "Con heo", phonetic: "/pɪɡ/" },
+  "chicken": { translation: "Con gà", phonetic: "/ˈtʃɪkɪn/" },
+  "cow": { translation: "Con bò", phonetic: "/kaʊ/" },
+  "horse": { translation: "Con ngựa", phonetic: "/hɔːs/" },
+  "sheep": { translation: "Con cừu", phonetic: "/ʃiːp/" },
+  "mouse": { translation: "Con chuột", phonetic: "/mʊs/" },
+  "tiger": { translation: "Con hổ", phonetic: "/ˈtaɪɡə(r)/" },
+  "zebra": { translation: "Ngựa vằn", phonetic: "/ˈzebrə/" },
+  "giraffe": { translation: "Hươu cao cổ", phonetic: "/dʒəˈrɑːf/" },
+  "hippo": { translation: "Hà mã", phonetic: "/ˈhɪpəʊ/" },
+  "turtle": { translation: "Con rùa", phonetic: "/ˈtɜːtl/" },
+  "spider": { translation: "Con nhện", phonetic: "/ˈspaɪdə(r)/" },
+  "ant": { translation: "Con kiến", phonetic: "/ænt/" },
+  "bee": { translation: "Con ong", phonetic: "/biː/" },
+  "flower": { translation: "Bông hoa", phonetic: "/ˈflaʊə(r)/" },
+  "tree": { translation: "Cái cây", phonetic: "/triː/" },
+  "leaf": { translation: "Chiếc lá", phonetic: "/liːf/" },
+  "sun": { translation: "Mặt trời", phonetic: "/sʌn/" },
+  "moon": { translation: "Mặt trăng", phonetic: "/muːn/" },
+  "star": { translation: "Ngôi sao", phonetic: "/stɑː(r)/" },
+  "cloud": { translation: "Đám mây", phonetic: "/klaʊd/" },
+  "rain": { translation: "Cơn mưa", phonetic: "/reɪn/" },
+  "sky": { translation: "Bầu trời", phonetic: "/skaɪ/" },
+  "water": { translation: "Nước", phonetic: "/ˈwɔːtə(r)/" },
+  "milk": { translation: "Sữa", phonetic: "/mɪlk/" },
+  "bread": { translation: "Bánh mì", phonetic: "/bred/" },
+  "rice": { translation: "Cơm", phonetic: "/raɪs/" },
+  "cake": { translation: "Bánh ngọt", phonetic: "/keɪk/" },
+  "sweet": { translation: "Kẹo ngọt", phonetic: "/swiːt/" },
+  "ice cream": { translation: "Kem", phonetic: "/ˌaɪs ˈkriːm/" },
+  "toy": { translation: "Đồ chơi", phonetic: "/tɔɪ/" },
+  "ball": { translation: "Quả bóng", phonetic: "/bɔːl/" },
+  "doll": { translation: "Búp bê", phonetic: "/dɒl/" },
+  "car": { translation: "Ô tô", phonetic: "/kɑː(r)/" },
+  "train": { translation: "Tàu hỏa", phonetic: "/treɪn/" },
+  "plane": { translation: "Máy bay", phonetic: "/pleɪn/" },
+  "boat": { translation: "Thuyền", phonetic: "/bəʊt/" },
+  "bike": { translation: "Xe đạp", phonetic: "/baɪk/" },
+  "red": { translation: "Màu đỏ", phonetic: "/red/" },
+  "blue": { translation: "Màu xanh dương", phonetic: "/bluː/" },
+  "green": { translation: "Màu xanh lá", phonetic: "/ɡriːn/" },
+  "yellow": { translation: "Màu vàng", phonetic: "/ˈjeləʊ/" },
+  "pink": { translation: "Màu hồng", phonetic: "/pɪŋk/" },
+  "purple": { translation: "Màu tím", phonetic: "/ˈpɜːpl/" },
+  "black": { translation: "Màu đen", phonetic: "/blæk/" },
+  "white": { translation: "Màu trắng", phonetic: "/waɪt/" },
+  "brown": { translation: "Màu nâu", phonetic: "/braʊn/" },
+  "grey": { translation: "Màu xám", phonetic: "/ɡreɪ/" },
+  "gray": { translation: "Màu xám", phonetic: "/ɡreɪ/" },
+  "one": { translation: "Số một", phonetic: "/wʌn/" },
+  "two": { translation: "Số hai", phonetic: "/tuː/" },
+  "three": { translation: "Số ba", phonetic: "/θriː/" },
+  "four": { translation: "Số bốn", phonetic: "/fɔː(r)/" },
+  "five": { translation: "Số năm", phonetic: "/faɪv/" },
+  "six": { translation: "Số sáu", phonetic: "/sɪks/" },
+  "seven": { translation: "Số bảy", phonetic: "/ˈsevn/" },
+  "eight": { translation: "Số tám", phonetic: "/eɪt/" },
+  "nine": { translation: "Số chín", phonetic: "/naɪn/" },
+  "ten": { translation: "Số mười", phonetic: "/ten/" }
+};
+
+function cleanAndFixVocabularyItem(w: any): any {
+  if (!w || typeof w !== "object") return w;
+  
+  const rawWord = String(w.word || "").trim();
+  const wordKey = rawWord.toLowerCase();
+  const cleanWordKey = wordKey.endsWith(".") ? wordKey.slice(0, -1).trim() : wordKey;
+  
+  // 1. Correct phonetic if it is just a lazy placeholder (e.g. equal to the word or simple slash /word/)
+  const rawPhonetic = String(w.phonetic || "").trim();
+  const cleanPhonetic = rawPhonetic.toLowerCase().replace(/[\s/]/g, "");
+  const cleanWord = wordKey.replace(/[^a-z]/g, "");
+  const isLazyPhonetic = cleanPhonetic === cleanWord || cleanPhonetic === "" || !rawPhonetic.startsWith("/") || !rawPhonetic.endsWith("/");
+  
+  // 2. Correct translation if it is identical to the English word
+  const isLazyTranslation = String(w.translation || "").toLowerCase().trim() === wordKey;
+  
+  const dictEntry = commonWordsDict[wordKey] || commonWordsDict[cleanWordKey];
+  
+  if (dictEntry) {
+    if (isLazyTranslation) {
+      w.translation = dictEntry.translation;
+    }
+    if (isLazyPhonetic) {
+      w.phonetic = dictEntry.phonetic;
+    }
+  }
+  
+  // 3. Fallback translate if translation is still lazy and not in our common dictionary
+  if (String(w.translation || "").toLowerCase().trim() === wordKey) {
+    w.translation = getFallbackTranslation(rawWord);
+  }
+  
+  // 4. Clean sentence translation from mixed English words (e.g., "Tớ thích teacher" -> "Tớ thích giáo viên")
+  if (w.sentenceTranslation && rawWord) {
+    const rx = new RegExp(`\\b${rawWord}\\b`, "gi");
+    if (rx.test(w.sentenceTranslation)) {
+      w.sentenceTranslation = w.sentenceTranslation.replace(rx, w.translation.toLowerCase());
+    }
+  }
+  
+  // Remove wrapping brackets or parens from sentence translation if any (e.g. "(Tớ thích cô giáo.)" -> "Tớ thích cô giáo.")
+  if (w.sentenceTranslation) {
+    let sTrans = String(w.sentenceTranslation).trim();
+    if (sTrans.startsWith("(") && sTrans.endsWith(")")) {
+      sTrans = sTrans.slice(1, -1).trim();
+    }
+    w.sentenceTranslation = sTrans;
+  }
+  
+  return w;
+}
+
 // Helper to choose a unique, appropriate emoji for fallback illustration
 function getFallbackIllustration(word: string): string {
   const dict: Record<string, string> = {
@@ -469,12 +635,12 @@ CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
 5. If the file contains only full sentences but no isolated words, extract keywords from those sentences to use as "word", and use the exact visual sentence as "sentence".
 6. If the file contains only isolated words but no sentences, write short, grammatically perfect, and simple sentences containing that word.
 7. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English words, explanations, or definitions. For example, if the word is 'Apple', translation must be 'Quả táo'.
-- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 8. Each vocabulary item in the list must feature:
 - word: The English vocabulary word (strictly English, with first letters capitalized).
 - translation: The exact Vietnamese translation/meaning.
-- phonetic: Accurate IPA phonetics (for example, '/kæt/').
+- phonetic: Accurate IPA phonetics (for example, '/kæt/', '/ˈtiːtʃə(r)/'). Do not lazy-render '/teacher/'.
 - sentence: The English example sentence (preserved from the file exactly, strictly English).
 - sentenceTranslation: The exact Vietnamese translation of the sentence.
 - illustration: Exactly one colorful, vivid Emoji representing the word.`;
@@ -497,12 +663,12 @@ CRITICAL SYSTEM REQUIREMENTS (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO):
 3. If the input list includes a Vietnamese translation, use that translation for the 'translation' field (or optimize it to be child-friendly). If no translation is provided, translate it accurately to Vietnamese.
 4. If the input item already contains a full sentence, use that sentence in the "sentence" field. Otherwise, write a simple, grammatically perfect English sentence containing the word.
 5. TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations, or separators.
-- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 6. Provide fully detailed fields for each word as requested:
 - word: The clean English word (with no Vietnamese meaning/translation text inside it).
 - translation: The direct Vietnamese translation.
-- phonetic: Correct IPA phonetic representation.
+- phonetic: Correct IPA phonetic representation (using actual IPA symbols like '/ˈtiːtʃə(r)/').
 - sentence: The English example sentence.
 - sentenceTranslation: The matching Vietnamese translation of the English example sentence.
 - illustration: Exactly one cute emoji representing the word.
@@ -519,13 +685,13 @@ LEVEL-APPROPRIATE VOCABULARY & GRAMMAR RULES:
 - GRAMMATICAL ACCURACY: Every sentence you generate MUST be 100% grammatically correct and natural. Avoid run-on sentences (like "I like my teacher is very kind" which is wrong). Write them correctly, e.g., "I like my kind teacher." or "My teacher is very kind. I like her."
 
 TRANSLATION RULE (DỊCH TIẾNG VIỆT CHUẨN, KHÔNG DỊCH TRỘN TIẾNG ANH):
-- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. Do NOT include English definitions, explanations or synonyms.
-- The 'sentenceTranslation' field MUST contain the accurate, natural-sounding, child-friendly Vietnamese translation of the English example 'sentence'. Do NOT mix English words in it (e.g., never write "Tớ thích my teacher is very kind").
+- The 'translation' field MUST contain the direct Vietnamese translation of the core vocabulary word. NEVER output the English word itself or any English text in the 'translation' field. (E.g. If the word is 'Teacher', translation MUST be 'Giáo viên' or 'Cô giáo/Thầy giáo', NEVER 'Teacher').
+- The 'sentenceTranslation' field MUST contain the direct, natural-sounding, child-friendly Vietnamese translation of the 'sentence'. Do NOT mix English words or write parenthesized English phrases. (E.g. If the sentence is 'I like teacher.', sentenceTranslation MUST be 'Tớ thích cô giáo.', NEVER 'Tớ thích teacher.' or '(Tớ thích teacher.)').
 
 For each word, fill:
 - word: The English word with first letter capitalized. Word complexity must match the level.
 - translation: The direct Vietnamese translation of the English word.
-- phonetic: Accurate IPA pronunciation (for example: '/dɒɡ/').
+- phonetic: Accurate IPA pronunciation (for example: '/dɒɡ/', '/ˈtiːtʃə(r)/').
 - sentence: An English sentence containing the word.
 - sentenceTranslation: The matching Vietnamese translation of the English example sentence.
 - illustration: Exactly one glowing, colorful, delightful emoji representing the word.
@@ -561,7 +727,7 @@ Your English sentences MUST be 100% grammatically correct, natural, simple, and 
 Respond ONLY in valid JSON conforming to the structured schema specified. Avoid complex words. Keep example sentences strictly positive and action-oriented for children. Use clear, vivid, child-pleasing Emojis for the illustration fields.
 
 CRITICAL RULES:
-1. PURE VIETNAMESE TRANSLATION (KHÔNG DỊCH TRỘN TIẾNG ANH): The 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT mix English words, explanations, or definitions into these translation fields (e.g., never write "Tớ thích my teacher is very kind" as a translation).
+1. PURE VIETNAMESE TRANSLATION (KHÔNG DỊCH TRỘN TIẾNG ANH): The 'translation' field must be the DIRECT VIETNAMESE translation of the word (e.g., 'con mèo', 'quả táo'), and the 'sentenceTranslation' field must be the DIRECT VIETNAMESE translation of the example sentence (e.g., 'Chú mèo nhỏ kêu meow meow.'). Do NOT mix English words, explanations, or definitions into these translation fields. NEVER write the English word inside the Vietnamese translation fields (e.g. never write 'Teacher' as translation for 'Teacher', it must be 'Giáo viên'; and never write 'Tớ thích teacher.' as translation for 'I like teacher.', it must be 'Tớ thích cô giáo.').
 2. PRESERVE ORIGINAL CONTENT (GIỮ NGUYÊN ĐẦU VÀO - KHÔNG SÁNG TẠO): If the user provides explicit English words, text, or uploads a document/image, you must preserve and retain those exact English words and their matching sentences, correcting only spelling mistakes. Do not replace them with unrelated words, do not create new custom sentences if the input already contains sentences. Do not be creative.
 3. ABSOLUTE RULE ON QUANTITY: When the user provides a list of N words, you MUST output EXACTLY N vocabulary items. Never output fewer items than the user provided. Count the input items and ensure your output array has the same count. Truncating or reducing the user's word list is STRICTLY FORBIDDEN.`,
             responseMimeType: "application/json",
@@ -590,7 +756,7 @@ CRITICAL RULES:
                       },
                       phonetic: {
                         type: Type.STRING,
-                        description: "Standard IPA phonetics, e.g., '/dɒɡ/'",
+                        description: "Standard IPA phonetics (International Phonetic Alphabet) using actual phonetic symbols, for example '/dɒɡ/', '/ˈtiːtʃə(r)/', '/ˈklɑːsruːm/'. Never output the plain English word itself enclosed in slashes (e.g., never write '/teacher/' or '/classroom/').",
                       },
                       sentence: {
                         type: Type.STRING,
@@ -630,13 +796,16 @@ CRITICAL RULES:
     console.log("[Gemini Response] Generation successful.");
     if (textOutput) {
       const parsedData = JSON.parse(textOutput.trim());
-      // Assign IDs to words automatically
+      // Assign IDs to words automatically & sanitize translation/phonetic fields
       if (parsedData.words && Array.isArray(parsedData.words)) {
-        parsedData.words = parsedData.words.map((w: any, idx: number) => ({
-          ...w,
-          id: `w-${Date.now()}-${idx}`,
-          category: topic || "Uploaded List",
-        }));
+        parsedData.words = parsedData.words.map((w: any, idx: number) => {
+          const cleaned = cleanAndFixVocabularyItem(w);
+          return {
+            ...cleaned,
+            id: `w-${Date.now()}-${idx}`,
+            category: topic || "Uploaded List",
+          };
+        });
       }
 
       // POST-GENERATION VALIDATION: Ensure output count matches input count for rawContent
@@ -656,14 +825,20 @@ CRITICAL RULES:
               const isSentence = item.english.trim().split(/\s+/).length > 1;
               const translation = item.vietnamese || getFallbackTranslation(item.english);
               
-              parsedData.words.push({
-                id: `w-${Date.now()}-fill-${parsedData.words.length}`,
+              const newWordItem = {
                 word: capitalizedWord,
                 translation: translation,
                 phonetic: `/${capitalizedWord.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
                 sentence: isSentence ? capitalizedWord : `I like ${capitalizedWord.toLowerCase()}.`,
                 sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
                 illustration: getFallbackIllustration(item.english),
+              };
+              
+              const cleanedWordItem = cleanAndFixVocabularyItem(newWordItem);
+              
+              parsedData.words.push({
+                ...cleanedWordItem,
+                id: `w-${Date.now()}-fill-${parsedData.words.length}`,
                 category: topic || "Uploaded List",
               });
             }
@@ -695,14 +870,20 @@ CRITICAL RULES:
         const isSentence = item.english.trim().split(/\s+/).length > 1;
         const translation = item.vietnamese || getFallbackTranslation(item.english);
         
-        return {
-          id: `w-fallback-${Date.now()}-${idx}`,
+        const rawItem = {
           word: capitalizedWord,
           translation: translation,
           phonetic: `/${item.english.toLowerCase().replace(/[^a-z\s]/g, "")}/`,
           sentence: isSentence ? capitalizedWord : `I like ${item.english.toLowerCase()}.`,
           sentenceTranslation: isSentence ? translation : `Tớ thích ${translation.toLowerCase()}.`,
           illustration: getFallbackIllustration(item.english),
+        };
+        
+        const cleanedItem = cleanAndFixVocabularyItem(rawItem);
+        
+        return {
+          ...cleanedItem,
+          id: `w-fallback-${Date.now()}-${idx}`,
           category: req.body.topic || "Uploaded List",
         };
       });
