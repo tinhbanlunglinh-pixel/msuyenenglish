@@ -379,11 +379,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           className="mt-4 p-3 bg-white rounded-xl border-2 border-green-200 flex flex-col items-center shadow-sm w-full text-center"
         >
-          <div className="text-sm font-sans font-black text-slate-600 mb-2">
-            Đánh giá phát âm:
-          </div>
-          <div className="inline-block px-6 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-2xl text-3xl font-black shadow-md border-4 border-amber-200 mb-3 transform hover:scale-105 transition-transform">
-            CEFR {scoreObj.cefr}
+          <div className="text-sm font-sans font-black text-slate-600 mb-3">
+            Điểm số: <span className="text-4xl text-emerald-500 ml-2">{scoreObj.score / 10}/10</span>
           </div>
           <p className="text-xs text-slate-500 mt-1 font-bold mb-3">
             {scoreObj.message}
