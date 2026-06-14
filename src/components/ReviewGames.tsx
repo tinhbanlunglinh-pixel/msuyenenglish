@@ -57,14 +57,23 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
 
   useEffect(() => {
     if (!words || words.length === 0) return;
-    const types: ReviewGameType[] = ["listen_match", "look_match", "match_meaning", "arrange_sentence", "balloon_pop"];
+    const genericEmojis = ["✨", "🌟", "💫", "⭐", "🎯", "🧩", "💡", "🔔", "🎵", "🎶", "💮", "💠", "🌈", "💎", "🔮", "🪄", "🏆", "🏅", "🎨", "🎈", "🎉", "🎊", "🎀", "🎁", "🧸"];
+    const validLookWords = words.filter(w => !genericEmojis.includes(w.illustration));
+    const validMeaningWords = words.filter(w => w.word.toLowerCase() !== w.translation.toLowerCase());
+    
+    const types: ReviewGameType[] = ["listen_match", "balloon_pop", "arrange_sentence"];
+    if (validLookWords.length > 0) types.push("look_match");
+    if (validMeaningWords.length >= 2) types.push("match_meaning");
+
     const generatedOrder: ReviewGameType[] = [];
     for (let i = 0; i < 30; i++) {
       generatedOrder.push(types[i % types.length]);
     }
-    setGameOrder(generatedOrder);
+    const finalOrder = generatedOrder.sort(() => 0.5 - Math.random());
+    
+    setGameOrder(finalOrder);
     setGameIndex(0);
-    setCurrentGameType(generatedOrder[0]);
+    setCurrentGameType(finalOrder[0]);
   }, [words]);
 
   useEffect(() => {
@@ -75,26 +84,37 @@ export const ReviewGames: React.FC<ReviewGamesProps> = ({
 
   const initCurrentGame = () => {
     if (!words || words.length === 0) return;
+    const genericEmojis = ["✨", "🌟", "💫", "⭐", "🎯", "🧩", "💡", "🔔", "🎵", "🎶", "💮", "💠", "🌈", "💎", "🔮", "🪄", "🏆", "🏅", "🎨", "🎈", "🎉", "🎊", "🎀", "🎁", "🧸"];
 
     if (currentGameType === "listen_match" || currentGameType === "look_match") {
-      // Pick a random target word
-      const target = words[Math.floor(Math.random() * words.length)];
+      let validTargets = words;
+      if (currentGameType === "look_match") {
+        validTargets = words.filter(w => !genericEmojis.includes(w.illustration));
+        if (validTargets.length === 0) {
+          setCurrentGameType("listen_match");
+          return;
+        }
+      }
+
+      // Pick a random target word from valid targets
+      const target = validTargets[Math.floor(Math.random() * validTargets.length)];
       setTargetWord(target);
 
-      // Generate 3 unique alternatives (or less if words list is extremely small)
-      const options = [target];
+      // Generate 3 unique alternatives
       const pool = words.filter((w) => w.id !== target.id);
       const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
       
-      for (let i = 0; i < Math.min(3, shuffledPool.length); i++) {
-        options.push(shuffledPool[i]);
-      }
-      
-      setShuffledOptions(options.sort(() => 0.5 - Math.random()));
+      const options = [target, ...shuffledPool.slice(0, 3)].sort(() => 0.5 - Math.random());
+      setShuffledOptions(options);
     } 
     else if (currentGameType === "match_meaning") {
-      // Pick up to 6 words to match (or all words if list is small)
-      const subset = [...words].slice(0, 6);
+      const validMeaningWords = words.filter(w => w.word.toLowerCase() !== w.translation.toLowerCase());
+      if (validMeaningWords.length < 2) {
+        setCurrentGameType("listen_match");
+        return;
+      }
+      // Pick up to 5 words to match
+      const subset = [...validMeaningWords].sort(() => 0.5 - Math.random()).slice(0, 5);
       setVocabShuffledEnglish([...subset].sort(() => 0.5 - Math.random()));
       setVocabShuffledVietnamese([...subset].sort(() => 0.5 - Math.random()));
       setMatchedPairs([]);

@@ -230,9 +230,9 @@ export const TestEngine: React.FC<TestEngineProps> = ({
     
     const isCorrect = option === questions[currentIndex].correctAnswer;
     if (isCorrect) {
-      playSound.playTing(); // Ideally a correct sound
+      playSound.playTing(); // correct sound
     } else {
-      playSound.playClick(); // Ideally a wrong sound
+      playSound.playClick(); // wrong sound
     }
     
     setUserAnswers({ ...userAnswers, [questions[currentIndex].id]: option });
@@ -377,7 +377,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
     });
 
     // Score out of 100
-    const rawScore = Math.round((correctCount / questionCount) * 100);
+    const rawScore = Math.round((correctCount / questions.length) * 100);
     
     // Standard Badging system
     const badgesEarned: Badge[] = [];
@@ -421,7 +421,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({
 
     const finalResult: TestResult = {
       score: rawScore,
-      totalQuestions: questionCount,
+      totalQuestions: questions.length,
       correctCount,
       wrongWords,
       badgesEarned,
@@ -724,6 +724,8 @@ export const TestEngine: React.FC<TestEngineProps> = ({
                         } else {
                           btnClass = "bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed";
                         }
+                      } else if (isSelected) {
+                        btnClass = "bg-indigo-100 border-indigo-500 text-indigo-700";
                       }
 
                       return (

@@ -149,22 +149,22 @@ function getExpressiveConfig(text: string, slow: boolean): SpeechConfig {
   if (isSingleWord) {
     // Single word: Speak clearly, slightly slower, with warm pitch
     return {
-      rate: slow ? 0.6 : 0.75,
-      pitch: 1.15,   // Warm, friendly, slightly higher
+      rate: slow ? 0.6 : 0.85,
+      pitch: 1.4,   // Youthful, energetic, high pitch
       volume: 1.0,
     };
   } else if (isShortSentence) {
     // Short sentence (Pre-starters/Starters): Clear, playful, engaging
     return {
-      rate: slow ? 0.65 : 0.8,
-      pitch: 1.12,   // Engaging, storytelling tone
+      rate: slow ? 0.65 : 0.9,
+      pitch: 1.35,   // Playful and energetic
       volume: 1.0,
     };
   } else {
     // Longer sentence (Movers/Flyers): Natural flow with good rhythm
     return {
-      rate: slow ? 0.7 : 0.85,
-      pitch: 1.08,   // Natural, flowing, expressive
+      rate: slow ? 0.7 : 0.95,
+      pitch: 1.25,   // Expressive and young
       volume: 1.0,
     };
   }
