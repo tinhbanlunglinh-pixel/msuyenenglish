@@ -672,6 +672,19 @@ app.post("/api/generate-lesson", async (req: Request, res: Response) => {
         wordRange: "15-20",
         ageRange: "Flyers (Cambridge English YLE) - Children aged 10-12. Use rich vocabulary, various sentence structures, and fluid simple storytelling, for example: 'We played fun games in the school garden yesterday.', 'She loves learning English so she can talk to everyone.'",
         sentenceRule: "Sentences should be longer (8-15 words), using varied tenses (past, present, future), compound sentences, adverbs, and richer expressions. Example: 'We played exciting games together in the school garden yesterday afternoon.' or 'She loves learning English because she wants to travel around the world.'"
+      },
+      // Alias levels sent by teacher frontend ("preschool" / "elementary")
+      "preschool": {
+        wordCount: "6 to 8",
+        wordRange: "6-8",
+        ageRange: "Mầm non (Preschool) - Trẻ 4-6 tuổi. Use basic everyday vocabulary, and short playful sentences describing animals, things, or fruits, for example: 'The dog is big.', 'This is a red apple.'",
+        sentenceRule: "Sentences should be short (4-6 words), using simple present tense, basic adjectives, and everyday vocabulary. Example: 'The dog is very big.' or 'I eat a red apple.'"
+      },
+      "elementary": {
+        wordCount: "10 to 12",
+        wordRange: "10-12",
+        ageRange: "Tiểu học (Elementary) - Trẻ 7-11 tuổi. Use practical vocabulary, complete sentences describing actions or features, for example: 'The cat is running happily.', 'I eat healthy fruits.'",
+        sentenceRule: "Sentences should be medium length (6-10 words), using present continuous, simple past, comparatives, and descriptive language. Example: 'The little cat is running happily in the garden.' or 'She eats healthy fruits every morning.'"
       }
     };
 
@@ -774,7 +787,7 @@ REMINDER: Output MUST contain ${currentLevelConfig.wordCount} vocabulary items. 
     console.log(`[Gemini Request] Generating lesson for level: ${level} with topic: ${topic || '(none)'} (Has File: ${!!filePart}) (Has RawContent: ${!!rawContent}${rawContent ? `, inputWords: ${rawContent.split(/[,;\n]+/).filter((s: string) => s.trim()).length}` : ''})`);
 
     let response = null;
-    const modelsToTry = ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"];
     let attempts = modelsToTry.length;
     let lastError = null;
 
@@ -1199,7 +1212,9 @@ function getFallbackWords(topic: string, level: string) {
     "pre-starter": 4,
     "starter": 8,
     "mover": 12,
-    "flyer": 20
+    "flyer": 20,
+    "preschool": 8,
+    "elementary": 12
   };
   const count = countMap[level.toLowerCase()] || 8;
 
